@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Marble Race - Tournament Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #0d0d1a; display: flex; justify-content: center;
+            align-items: center; height: 100vh; width: 100vw; overflow: hidden;
+            font-family: 'Arial', sans-serif; touch-action: none;
+        }
+        canvas { max-width: 100%; max-height: 100%; display: block; }
+        
+        /* PICKER UI CSS */
+        #picker-overlay { display: none; position: fixed; inset: 0; background: #0a0a18; z-index: 1000; flex-direction: column; align-items: center; }
+        #picker-overlay.show { display: flex; }
+        #picker-header { width: 100%; max-width: 540px; background: linear-gradient(135deg, #1a0a2e, #2d1b4e); padding: 12px 14px 10px; border-bottom: 2px solid #9b59b6; flex-shrink: 0; }
+        #picker-title { color: #FFD700; font-size: 17px; font-weight: bold; text-align: center; text-shadow: 0 0 10px #FFD700aa; }
+        #picker-count { color: #dda0ff; font-size: 13px; text-align: center; margin: 3px 0 8px; }
+        #picker-btns { display: flex; gap: 8px; justify-content: center; }
+        #picker-btns button { padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all .15s; }
+        #btn-auto { background: linear-gradient(135deg, #9b59b6, #6c3483); color: #fff; box-shadow: 0 2px 8px #9b59b655; }
+        #btn-clear { background: #444; color: #fff; }
+        #btn-start { background: linear-gradient(135deg, #27ae60, #1e8449); color: #fff; box-shadow: 0 2px 8px #27ae6055; }
+        #btn-start:disabled { background: #333; color: #555; cursor: not-allowed; box-shadow: none; }
+        #picker-search { width: 100%; max-width: 540px; padding: 8px 12px; background: #0f0f20; flex-shrink: 0; border-bottom: 1px solid #2a2a4a; }
+        #picker-search input { width: 100%; padding: 7px 12px; background: #1a1a1a; border: 1px solid #444; border-radius: 8px; color: #fff; font-size: 14px; outline: none; }
+        #picker-grid { width: 100%; max-width: 540px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 8px; }
+        .cc { background: #12122a; border: 2px solid #2a2a4a; border-radius: 8px; display: flex; flex-direction: column; align-items: center; padding: 7px 3px 5px; cursor: pointer; transition: all .15s; user-select: none; -webkit-tap-highlight-color: transparent; position: relative; }
+        .cc:active { transform: scale(0.95); }
+        .cc.sel { background: #2d1060; border-color: #9b59b6; box-shadow: 0 0 8px #9b59b655; }
+        .cc img { width: 34px; height: 22px; object-fit: cover; border-radius: 3px; border: 1px solid #444; }
+        .cc .cn { color: #bbb; font-size: 9px; text-align: center; margin-top: 3px; line-height: 1.2; }
+        .cc.sel .cn { color: #dda0ff; }
+        .cc .bdg { position: absolute; top: 2px; right: 3px; background: #9b59b6; color: #fff; font-size: 9px; font-weight: bold; border-radius: 50%; width: 15px; height: 15px; display: flex; align-items: center; justify-content: center; }
+
+        /* KILL FEED HTML OVERLAY */
+        #kill-feed-container {
+            position: absolute;
+            top: 125px; left: 8px;
+            width: 175px; pointer-events: none;
+            z-index: 2000; display: none;
+            font-family: monospace; font-size: 11px;
+            color: #ffffff; font-weight: bold;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, -1px 1px 0 #000, 0px 2px 2px rgba(0,0,0,0.8);
+        }
+        #kill-feed-container .title { margin-bottom: 3px; color: #ff4444; font-size: 12px; letter-spacing: 1px; }
+        #kill-feed-container .feed-item { margin-bottom: 1px; display: flex; align-items: center; opacity: 0.95; }
+        .gun-flipped { display: inline-block; transform: scaleX(-1); margin: 0 3px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div id="picker-overlay">
+        <div id="picker-header">
+            <div id="picker-title">⚔️ BATTLE ROYALE — Choose 16 Countries</div>
+            <div id="picker-count">Selected: <span id="sel-count">0</span> / 16</div>
+            <div id="picker-btns">
+                <button id="btn-auto">🎲 Auto Pick</button>
+                <button id="btn-clear">✕ Clear</button>
+                <button id="btn-start" disabled>▶ START</button>
+            </div>
+        </div>
+        <div id="picker-search"><input type="text" id="search-input" placeholder="🔍 Search country..."></div>
+        <div id="picker-grid"></div>
+    </div>
+
+    <div id="kill-feed-container">
+        <div class="title">⚔️ COMBAT FEED</div>
+        <div id="kill-feed-list"></div>
+    </div>
+
+    <script>
+        const rawData = "AF:Afghanistan,AL:Albania,DZ:Algeria,AD:Andorra,AO:Angola,AR:Argentina,AM:Armenia,AU:Australia,AT:Austria,AZ:Azerbaijan,BS:Bahamas,BH:Bahrain,BD:Bangladesh,BB:Barbados,BY:Belarus,BE:Belgium,BZ:Belize,BJ:Benin,BT:Bhutan,BO:Bolivia,BA:Bosnia,BW:Botswana,BR:Brazil,BN:Brunei,BG:Bulgaria,BF:Burkina Faso,BI:Burundi,CV:Cabo Verde,KH:Cambodia,CM:Cameroon,CA:Canada,CF:Central African Rep,TD:Chad,CL:Chile,CN:China,CO:Colombia,KM:Comoros,CG:Congo,CR:Costa Rica,HR:Croatia,CU:Cuba,CY:Cyprus,CZ:Czechia,DK:Denmark,DJ:Djibouti,DM:Dominica,DO:Dominican Rep,EC:Ecuador,EG:Egypt,SV:El Salvador,GQ:Equatorial Guinea,ER:Eritrea,EE:Estonia,SZ:Eswatini,ET:Ethiopia,FJ:Fiji,FI:Finland,FR:France,GA:Gabon,GM:Gambia,GE:Georgia,DE:Germany,GH:Ghana,GR:Greece,GD:Grenada,GT:Guatemala,GN:Guinea,GW:Guinea-Bissau,GY:Guyana,HT:Haiti,HN:Honduras,HU:Hungary,IS:Iceland,IN:India,ID:Indonesia,IR:Iran,IQ:Iraq,IE:Ireland,IL:Israel,IT:Italy,JM:Jamaica,JP:Japan,JO:Jordan,KZ:Kazakhstan,KE:Kenya,KI:Kiribati,KP:North Korea,KR:South Korea,KW:Kuwait,KG:Kyrgyzstan,LA:Laos,LV:Latvia,LB:Lebanon,LS:Lesotho,LR:Liberia,LY:Libya,LI:Liechtenstein,LT:Lithuania,LU:Luxembourg,MG:Madagascar,MW:Malawi,MY:Malaysia,MV:Maldives,ML:Mali,MT:Malta,MH:Marshall Islands,MR:Mauritania,MU:Mauritius,MX:Mexico,FM:Micronesia,MD:Moldova,MC:Monaco,MN:Mongolia,ME:Montenegro,MA:Morocco,MZ:Mozambique,MM:Myanmar,NA:Namibia,NR:Nauru,NP:Nepal,NL:Netherlands,NZ:New Zealand,NI:Nicaragua,NE:Niger,NG:Nigeria,MK:North Macedonia,NO:Norway,OM:Oman,PK:Pakistan,PW:Palau,PA:Panama,PG:Papua New Guinea,PY:Paraguay,PE:Peru,PH:Philippines,PL:Poland,PT:Portugal,QA:Qatar,RO:Romania,RU:Russia,RW:Rwanda,KN:St Kitts,LC:St Lucia,VC:St Vincent,WS:Samoa,SM:San Marino,ST:Sao Tome,SA:Saudi Arabia,SN:Senegal,RS:Serbia,SC:Seychelles,SL:Sierra Leone,SG:Singapore,SK:Slovakia,SI:Slovenia,SB:Solomon Islands,SO:Somalia,ZA:South Africa,SS:South Sudan,ES:Spain,LK:Sri Lanka,SD:Sudan,SR:Suriname,SE:Sweden,CH:Switzerland,SY:Syria,TJ:Tajikistan,TZ:Tanzania,TH:Thailand,TL:Timor-Leste,TG:Togo,TO:Tonga,TT:Trinidad,TN:Tunisia,TR:Turkey,TM:Turkmenistan,TV:Tuvalu,UG:Uganda,UA:Ukraine,AE:UAE,GB:UK,US:USA,UY:Uruguay,UZ:Uzbekistan,VU:Vanuatu,VE:Venezuela,VN:Vietnam,YE:Yemen,ZM:Zambia,ZW:Zimbabwe";
+        const allCountries = rawData.split(',').map(s => { let p = s.split(':'); return { code: p[0], name: p[1] }; });
+
+        function getUniqueCountryPool(desiredCount) {
+            const uniquePool = []; const usedCodes = new Set(); const shuffledMaster = shuffleArr([...allCountries]);
+            for (let c of shuffledMaster) { if (uniquePool.length >= desiredCount) break; if (!usedCodes.has(c.code)) { usedCodes.add(c.code); uniquePool.push(c); } }
+            return uniquePool.slice(0, desiredCount);
+        }
+
+        let gameState = {
+            activeRoster: [], eliminatedNames: [], mode: 'normal', brCountries: [], brScores: {}, brPrevScores: {},
+            brRound: 0, maxBrRounds: 6, prevRankMap: {}, wins: {}, roundHistory: [], roundStats: [],
+            lastRoundKP: {}, lastRoundPP: {}, tourneyPhase: 0, tourneyGroups: [], currentGroupIdx: 0,
+            tourneyAdvancing: [], wildcards: [], midMatch: null, showMatchReport: false, grandFinalEarlyWinner: null,
+            globalStats: { kills: {}, wins: {}, placementPts: {} },
+            seasons: [], seasonSaved: false
+        };
+
+        function saveGameState() { localStorage.setItem('marbleRaceSave', JSON.stringify(gameState)); }
+        function shuffleArr(a) { let b = [...a]; for (let i = b.length - 1; i > 0; i--) { let j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+
+        function buildGrid(f = '') {
+            const g = document.getElementById('picker-grid'); g.innerHTML = '';
+            allCountries.filter(c => c.name.toLowerCase().includes(f.toLowerCase())).forEach(c => {
+                let d = document.createElement('div'); d.className = 'cc' + (pickerSel.has(c.code) ? ' sel' : '');
+                let img = document.createElement('img'); img.src = `https://flagcdn.com/w40/${c.code.toLowerCase()}.png`;
+                let nm = document.createElement('div'); nm.className = 'cn'; nm.textContent = c.name;
+                d.appendChild(img); d.appendChild(nm);
+                if (pickerSel.has(c.code)) { let b = document.createElement('div'); b.className = 'bdg'; b.textContent = [...pickerSel].indexOf(c.code) + 1; d.appendChild(b); }
+                d.addEventListener('click', () => { if (pickerSel.has(c.code)) pickerSel.delete(c.code); else if (pickerSel.size < 16) pickerSel.add(c.code); updatePicker(); });
+                g.appendChild(d);
+            });
+        }
+        let pickerSel = new Set();
+        function updatePicker() { document.getElementById('sel-count').textContent = pickerSel.size; document.getElementById('btn-start').disabled = pickerSel.size !== 16; buildGrid(document.getElementById('search-input').value); }
+        function showPicker() { pickerSel.clear(); buildGrid(); updatePicker(); document.getElementById('picker-overlay').classList.add('show'); }
+        function hidePicker() { document.getElementById('picker-overlay').classList.remove('show'); }
+
+        document.getElementById('btn-auto').addEventListener('click', () => { pickerSel.clear(); shuffleArr(allCountries).slice(0, 16).forEach(c => pickerSel.add(c.code)); updatePicker(); });
+        document.getElementById('btn-clear').addEventListener('click', () => { pickerSel.clear(); updatePicker(); });
+        document.getElementById('btn-start').addEventListener('click', () => {
+            if (pickerSel.size !== 16) return; hidePicker();
+            let chosen = allCountries.filter(c => pickerSel.has(c.code));
+            gameState.mode = 'br'; gameState.brCountries = chosen; gameState.maxBrRounds = 6;
+            gameState.brScores = {}; gameState.brPrevScores = {}; gameState.wins = {}; gameState.roundHistory = []; gameState.roundStats = []; gameState.lastRoundKP = {}; gameState.lastRoundPP = {};
+            gameState.grandFinalEarlyWinner = null;
+            chosen.forEach(c => { gameState.brScores[c.code] = 0; gameState.brPrevScores[c.code] = 0; gameState.wins[c.code] = 0; });
+            gameState.brRound = 0; gameState.tourneyPhase = 0; gameState.midMatch = null; gameState.showMatchReport = false;
+            saveGameState();
+            window.phaserGame.scene.stop('MenuScene'); window.phaserGame.scene.start('BRRoundSelectScene');
+        });
+        document.getElementById('search-input').addEventListener('input', e => buildGrid(e.target.value));
+
+        function makeCircleTexture(scene, code) {
+            if (scene.textures.exists(code + '_c')) return;
+            let src = scene.textures.get(code).getSourceImage();
+            let cv = document.createElement('canvas'); cv.width = 52; cv.height = 52; let ctx = cv.getContext('2d');
+            ctx.beginPath(); ctx.arc(26, 26, 24, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+            ctx.drawImage(src, 0, 0, 52, 52);
+            ctx.beginPath(); ctx.arc(26, 26, 23, 0, Math.PI * 2); ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.stroke();
+            scene.textures.addImage(code + '_c', cv);
+        }
+
+        function computeRankMap(scoresObj, countries) {
+            let sorted = [...countries].sort((a, b) => {
+                let diff = (scoresObj[b.code] || 0) - (scoresObj[a.code] || 0);
+                if (diff !== 0) return diff;
+                return a.name.localeCompare(b.name);
+            });
+            let map = {}; sorted.forEach((c, i) => { map[c.code] = i + 1; }); return map;
+        }
+
+        function rankArrow(curRank, prevRank) {
+            if (!prevRank) return '';
+            let diff = prevRank - curRank;
+            if (diff > 0) return `↑${diff}`;
+            if (diff < 0) return `↓${Math.abs(diff)}`;
+            return '–';
+        }
+
+        function getAdvancingCount() {
+            if (gameState.tourneyPhase === 1) return 4;
+            if (gameState.tourneyPhase === 2) return 5;
+            if (gameState.tourneyPhase === 3) return 1;
+            return 0;
+        }
+
+        // ── MENU SCENE ──
+        class MenuScene extends Phaser.Scene {
+            constructor() { super('MenuScene'); }
+            preload() { this.load.crossOrigin = 'Anonymous'; allCountries.forEach(c => this.load.image(c.code, `https://flagcdn.com/w40/${c.code.toLowerCase()}.png`)); }
+            create() {
+                if (!gameState.seasons) gameState.seasons = [];
+                if (typeof gameState.seasonSaved === 'undefined') gameState.seasonSaved = false;
+
+                allCountries.forEach(c => makeCircleTexture(this, c.code));
+                let g = this.add.graphics(); g.fillGradientStyle(0x0d0d1a, 0x0d0d1a, 0x1a0a2e, 0x1a0a2e, 1); g.fillRect(0, 0, 540, 960);
+                let t = this.add.text(270, 75, '🎱 MARBLE RACE', { fontSize: '46px', fontStyle: 'bold', color: '#fff', stroke: '#4fc3f7', strokeThickness: 5 }).setOrigin(0.5);
+
+                this.makeBtn(270, 200, '⚡ NORMAL MODE', '60 countries • Bounce & Survive', 0xc0392b, 0xe74c3c, () => {
+                    gameState.mode = 'normal'; gameState.eliminatedNames = []; gameState.activeRoster = getUniqueCountryPool(60);
+                    saveGameState(); this.scene.start('GameScene');
+                });
+                this.makeBtn(270, 290, '🥊 CUSTOM BATTLE ROYALE', 'Pick 16 • 6 rounds • Points system', 0x7d3c98, 0x9b59b6, () => showPicker());
+
+                let canPlayTourney = true;
+                let tourneySub = 'Play every match visually!';
+                let tourneyColor = 0x2980b9; let tourneyHover = 0x3498db;
+
+                if (gameState.seasons && gameState.seasons.length > 0) {
+                    let lastSeason = gameState.seasons[gameState.seasons.length - 1];
+                    let now = new Date();
+                    if (lastSeason.month === now.getMonth() && lastSeason.year === now.getFullYear()) {
+                        canPlayTourney = false;
+                        tourneySub = `🔒 Next Season unlocks next month!`;
+                        tourneyColor = 0x555555; tourneyHover = 0x777777;
+                    }
+                }
+
+                this.makeBtn(270, 380, '🏆 TOURNAMENT (192)', tourneySub, tourneyColor, tourneyHover, () => {
+                    if (!canPlayTourney) {
+                        alert("Ek mahina ma ek season matra garna milchha!\nWait until next month to start a new tournament.");
+                        return;
+                    }
+                    gameState.tourneyPhase = 1; gameState.tourneyGroups = []; gameState.tourneyAdvancing = []; gameState.currentGroupIdx = 0; gameState.brRound = 0; gameState.roundStats = [];
+                    gameState.grandFinalEarlyWinner = null; gameState.seasonSaved = false;
+                    gameState.globalStats = { kills: {}, wins: {}, placementPts: {} };
+                    saveGameState(); this.scene.start('TourneyScene');
+                });
+
+                this.makeBtn(270, 470, '📚 SEASON HISTORY', 'View past champions & top 16 ranks', 0x27ae60, 0x2ecc71, () => {
+                    this.scene.start('HistoryScene');
+                });
+
+                let savedData = localStorage.getItem('marbleRaceSave');
+                if (savedData) {
+                    this.makeBtn(270, 580, '💾 RESUME SAVED GAME', 'Load your last saved match', 0xd35400, 0xe67e22, () => {
+                        try {
+                            let parsed = JSON.parse(savedData); Object.assign(gameState, parsed);
+                            if (gameState.midMatch && gameState.midMatch.active) this.scene.start('BRGameScene');
+                            else if (gameState.tourneyPhase > 0) this.scene.start('TourneyScene');
+                            else if (gameState.mode === 'br') this.scene.start('BRRoundSelectScene');
+                            else this.scene.start('GameScene');
+                        } catch (e) { console.error(e); }
+                    });
+                }
+            }
+            makeBtn(x, y, title, sub, colD, colH, cb) {
+                let bg = this.add.rectangle(x, y, 360, 65, colD, 1).setInteractive();
+                this.add.text(x, y - 10, title, { fontSize: '20px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);
+                this.add.text(x, y + 12, sub, { fontSize: '11px', color: 'rgba(255,255,255,0.7)' }).setOrigin(0.5);
+                bg.on('pointerdown', cb);
+            }
+        }
+
+        // ── HISTORY HUB SCENE ──
+        class HistoryScene extends Phaser.Scene {
+            constructor() { super('HistoryScene'); }
+            create() {
+                let g = this.add.graphics(); g.fillGradientStyle(0x0a0a18, 0x0a0a18, 0x1a2530, 0x1a2530, 1); g.fillRect(0, 0, 540, 960);
+                this.add.text(270, 50, '📚 ALL-TIME SEASONS', { fontSize: '26px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
+                
+                if (!gameState.seasons || gameState.seasons.length === 0) {
+                    this.add.text(270, 400, 'Ahile samma kunai pani season sakiyeko chaina.\nKhelera jita ani yaha record aauchha!', { fontSize: '16px', color: '#aaa', align: 'center', wordWrap: {width: 400} }).setOrigin(0.5);
+                } else {
+                    let startY = 130;
+                    gameState.seasons.forEach((season, idx) => {
+                        let y = startY + idx * 85;
+                        let bg = this.add.rectangle(270, y, 480, 75, 0x1f2438).setInteractive();
+                        bg.setStrokeStyle(1, 0x34495e);
+                        this.add.text(40, y - 16, `Season ${season.id} • ${season.name}`, { fontSize: '17px', fontStyle: 'bold', color: '#4fc3f7' }).setOrigin(0, 0.5);
+                        this.add.text(40, y + 12, `👑 Champion: ${season.champion.name}`, { fontSize: '15px', color: '#FFD700' }).setOrigin(0, 0.5);
+                        if (this.textures.exists(season.champion.code + '_c')) {
+                            this.add.image(470, y, season.champion.code + '_c').setDisplaySize(44, 44);
+                        }
+                        bg.on('pointerdown', () => { this.scene.start('SeasonDetailScene', { season: season }); });
+                    });
+                }
+                
+                let btn = this.add.rectangle(270, 900, 320, 50, 0xe74c3c).setInteractive();
+                this.add.text(270, 900, '🏠 BACK TO MENU', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                btn.on('pointerdown', () => this.scene.start('MenuScene'));
+            }
+        }
+
+        // ── SEASON DETAIL SCENE ──
+        class SeasonDetailScene extends Phaser.Scene {
+            constructor() { super('SeasonDetailScene'); }
+            init(data) { this.season = data.season; }
+            create() {
+                let g = this.add.graphics(); g.fillGradientStyle(0x0a0a18, 0x0a0a18, 0x1a0530, 0x1a0530, 1); g.fillRect(0, 0, 540, 960);
+                this.add.text(270, 40, `🏆 SEASON ${this.season.id} RESULTS`, { fontSize: '24px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
+                this.add.text(270, 70, `Final Top 16 Rankings of ${this.season.name}`, { fontSize: '14px', color: '#aaa' }).setOrigin(0.5);
+                
+                this.season.top16.forEach((c, i) => {
+                    let y = 110 + i * 46;
+                    this.add.rectangle(270, y + 18, 460, 40, i === 0 ? 0x2c3e50 : (i % 2 === 0 ? 0x15152a : 0x111122)).setOrigin(0.5);
+                    this.add.text(40, y + 10, `${i+1}.`, { fontSize: '15px', color: i === 0 ? '#f1c40f' : '#ccc', fontStyle: 'bold' }).setOrigin(0, 0);
+                    if (this.textures.exists(c.code + '_c')) this.add.image(85, y + 18, c.code + '_c').setDisplaySize(30, 30);
+                    this.add.text(115, y + 10, c.name, { fontSize: '15px', color: i === 0 ? '#f1c40f' : '#fff', fontStyle: 'bold' }).setOrigin(0, 0);
+                    this.add.text(470, y + 10, `${c.score} pts`, { fontSize: '15px', color: '#3498db', fontStyle: 'bold' }).setOrigin(1, 0);
+                });
+                
+                let btn = this.add.rectangle(270, 910, 320, 55, 0x9b59b6).setInteractive();
+                this.add.text(270, 910, '🔙 BACK TO HISTORY', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                btn.on('pointerdown', () => this.scene.start('HistoryScene'));
+            }
+        }
+
+        // ── TOURNAMENT HUB SCENE ──
+        class TourneyScene extends Phaser.Scene {
+            constructor() { super('TourneyScene'); }
+            create() {
+                let g = this.add.graphics(); g.fillGradientStyle(0x0a0a1a, 0x0a0a1a, 0x1a2530, 0x1a2530, 1); g.fillRect(0, 0, 540, 960);
+                if (!gameState.tourneyPhase) gameState.tourneyPhase = 1;
+
+                if (gameState.tourneyPhase === 4) {
+                    this.add.text(270, 280, '🏆 TOURNAMENT COMPLETE 🏆', { fontSize: '28px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
+                    let w = gameState.tourneyAdvancing[0];
+                    if (w && this.textures.exists(w.code + '_c')) this.add.image(270, 180, w.code + '_c').setDisplaySize(110, 110);
+                    
+                    if (!gameState.seasonSaved) {
+                        let now = new Date();
+                        let monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        let seasonName = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+                        
+                        let finalSorted = [...gameState.brCountries].sort((a, b) => {
+                            let diff = (gameState.brScores[b.code] || 0) - (gameState.brScores[a.code] || 0);
+                            if (diff !== 0) return diff;
+                            return a.name.localeCompare(b.name);
+                        });
+                        
+                        if (!gameState.seasons) gameState.seasons = [];
+                        gameState.seasons.push({
+                            id: gameState.seasons.length + 1,
+                            name: seasonName,
+                            month: now.getMonth(),
+                            year: now.getFullYear(),
+                            champion: finalSorted[0],
+                            top16: finalSorted.map(c => ({ code: c.code, name: c.name, score: gameState.brScores[c.code] }))
+                        });
+                        gameState.seasonSaved = true;
+                        saveGameState();
+                    }
+
+                    this.add.text(270, 360, 'All-time statistics & ranks have been saved!', { fontSize: '15px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5);
+
+                    let b1 = this.add.rectangle(270, 480, 260, 50, 0x34495e).setInteractive();
+                    this.add.text(270, 480, '📊 VIEW ALL-TIME STATS', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                    b1.on('pointerdown', () => this.scene.start('TourneyStatsScene'));
+
+                    let btn = this.add.rectangle(270, 560, 260, 50, 0x27ae60).setInteractive();
+                    this.add.text(270, 560, '🏠 BACK TO MENU', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                    btn.on('pointerdown', () => { gameState.tourneyPhase = 0; saveGameState(); this.scene.start('MenuScene'); });
+                    return;
+                }
+
+                if (!gameState.tourneyGroups || gameState.tourneyGroups.length === 0) this.initPhase();
+                if ((gameState.brRound > 0 && gameState.brRound >= gameState.maxBrRounds) || (gameState.tourneyPhase === 3 && gameState.grandFinalEarlyWinner)) { this.processGroupResults(); return; }
+
+                let pText = gameState.tourneyPhase === 1 ? 'ROUND 1 (12 Groups)' : gameState.tourneyPhase === 2 ? 'ROUND 2 (3 Groups)' : 'GRAND FINAL';
+                this.add.text(270, 40, `🏆 TOURNAMENT: ${pText}`, { fontSize: '20px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
+                let groupLetter = gameState.tourneyPhase === 3 ? 'FINAL' : String.fromCharCode(65 + gameState.currentGroupIdx);
+                this.add.text(270, 75, `UP NEXT: GROUP ${groupLetter}`, { fontSize: '18px', color: '#4fc3f7', fontStyle: 'bold' }).setOrigin(0.5);
+
+                let currentGroup = gameState.tourneyGroups[gameState.currentGroupIdx];
+                for (let i = 0; i < currentGroup.length; i++) {
+                    let col = i % 4, row = Math.floor(i / 4);
+                    let x = 85 + col * 123, y = 150 + row * 90;
+                    let c = currentGroup[i];
+                    if (this.textures.exists(c.code + '_c')) this.add.image(x, y, c.code + '_c').setDisplaySize(42, 42);
+                    this.add.text(x, y + 30, c.name.length > 10 ? c.name.substring(0, 9) + '..' : c.name, { fontSize: '11px', color: '#ccc' }).setOrigin(0.5);
+                }
+
+                let statsBtn = this.add.rectangle(270, 780, 320, 50, 0x2e4053).setInteractive();
+                this.add.text(270, 780, '📊 VIEW TOURNAMENT STATS (TOP 10)', { fontSize: '15px', fontStyle: 'bold', color: '#5dade2' }).setOrigin(0.5);
+                statsBtn.on('pointerdown', () => this.scene.start('TourneyStatsScene'));
+
+                let btnTxt = gameState.brRound === 0 ? `▶ START GROUP ${groupLetter}` : `▶ PLAY MATCH ${gameState.brRound + 1}`;
+                this.actionBtn = this.add.rectangle(270, 860, 320, 60, 0x9b59b6).setInteractive();
+                this.add.text(270, 860, btnTxt, { fontSize: '18px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);
+
+                this.actionBtn.on('pointerdown', () => {
+                    if (gameState.brRound === 0) {
+                        gameState.brCountries = [...currentGroup];
+                        gameState.brScores = {}; gameState.brPrevScores = {}; gameState.wins = {}; gameState.roundHistory = []; gameState.roundStats = []; gameState.showMatchReport = false;
+                        currentGroup.forEach(c => { gameState.brScores[c.code] = 0; gameState.brPrevScores[c.code] = 0; gameState.wins[c.code] = 0; });
+                    }
+                    gameState.mode = 'br'; saveGameState(); this.scene.start('BRRoundSelectScene');
+                });
+            }
+
+            initPhase() {
+                if (gameState.tourneyPhase === 1) {
+                    gameState.maxBrRounds = 6; gameState.tourneyAdvancing = []; gameState.grandFinalEarlyWinner = null;
+                    gameState.seasonSaved = false;
+                    const pool = getUniqueCountryPool(192); gameState.tourneyGroups = [];
+                    for (let i = 0; i < 12; i++) gameState.tourneyGroups.push(pool.slice(i * 16, (i + 1) * 16));
+                    gameState.currentGroupIdx = 0;
+                } else if (gameState.tourneyPhase === 2) {
+                    gameState.maxBrRounds = 6;
+                    let shuffled = Phaser.Utils.Array.Shuffle([...gameState.tourneyAdvancing]);
+                    gameState.tourneyGroups = [];
+                    for (let i = 0; i < 3; i++) gameState.tourneyGroups.push(shuffled.slice(i * 16, (i + 1) * 16));
+                    gameState.tourneyAdvancing = []; gameState.wildcards = []; gameState.currentGroupIdx = 0;
+                } else if (gameState.tourneyPhase === 3) {
+                    gameState.maxBrRounds = 12; gameState.grandFinalEarlyWinner = null;
+                    gameState.tourneyGroups = [gameState.tourneyAdvancing];
+                    gameState.tourneyAdvancing = []; gameState.currentGroupIdx = 0;
+                }
+                gameState.roundStats = []; saveGameState();
+            }
+
+            processGroupResults() {
+                let sorted = [...gameState.brCountries].sort((a, b) => {
+                    let diff = (gameState.brScores[b.code] || 0) - (gameState.brScores[a.code] || 0);
+                    if (diff !== 0) return diff;
+                    return a.name.localeCompare(b.name);
+                });
+
+                if (gameState.tourneyPhase === 3) {
+                    if (gameState.grandFinalEarlyWinner) {
+                        let winObj = gameState.brCountries.find(c => c.code === gameState.grandFinalEarlyWinner);
+                        gameState.tourneyAdvancing = [winObj];
+                    } else {
+                        gameState.tourneyAdvancing = [sorted[0]];
+                    }
+                    gameState.tourneyPhase = 4; saveGameState(); this.scene.restart(); return;
+                }
+                
+                if (gameState.tourneyPhase === 1) gameState.tourneyAdvancing.push(...sorted.slice(0, 4));
+                else if (gameState.tourneyPhase === 2) { gameState.tourneyAdvancing.push(...sorted.slice(0, 5)); gameState.wildcards.push(sorted[5]); }
+                
+                gameState.currentGroupIdx++; gameState.brRound = 0;
+                if (gameState.currentGroupIdx >= gameState.tourneyGroups.length) {
+                    if (gameState.tourneyPhase === 2) {
+                        let bestWc = gameState.wildcards.sort((a, b) => {
+                            let diff = (gameState.brScores[b.code] || 0) - (gameState.brScores[a.code] || 0);
+                            if (diff !== 0) return diff;
+                            return a.name.localeCompare(b.name);
+                        })[0];
+                        gameState.tourneyAdvancing.push(bestWc);
+                    }
+                    gameState.tourneyPhase++; gameState.tourneyGroups = [];
+                }
+                saveGameState(); this.scene.restart();
+            }
+        }
+
+        // ── BR LEADERBOARD & MATCH REPORT SCENE ──
+        class BRRoundSelectScene extends Phaser.Scene {
+            constructor() { super('BRRoundSelectScene'); }
+            create() {
+                let g = this.add.graphics(); g.fillGradientStyle(0x0a0a18, 0x0a0a18, 0x1a0530, 0x1a0530, 1); g.fillRect(0, 0, 540, 960);
+                if (gameState.showMatchReport) { this.renderMatchBreakdown(); } else { this.renderOverallLeaderboard(); }
+            }
+
+            renderMatchBreakdown() {
+                let currentMatchNum = gameState.brRound;
+                this.add.text(270, 40, `📊 MATCH ${currentMatchNum} POINTS REPORT`, { fontSize: '24px', fontStyle: 'bold', color: '#ffbe76' }).setOrigin(0.5);
+                this.add.text(270, 72, 'Points distribution for the match just completed', { fontSize: '13px', color: '#aaa' }).setOrigin(0.5);
+
+                this.add.text(40, 115, 'Country', { fontSize: '11px', color: '#888' }).setOrigin(0, 0);
+                this.add.text(230, 115, 'Match Kills', { fontSize: '11px', color: '#e67e22' }).setOrigin(0.5, 0);
+                this.add.text(340, 115, 'Placement Pts', { fontSize: '11px', color: '#2980b9' }).setOrigin(0.5, 0);
+                this.add.text(450, 115, 'Match Total', { fontSize: '11px', color: '#2ecc71' }).setOrigin(0.5, 0);
+
+                let sortedMatch = [...gameState.brCountries].sort((a, b) => {
+                    let ptsA = (gameState.lastRoundKP[a.code] || 0) + (gameState.lastRoundPP[a.code] || 0);
+                    let ptsB = (gameState.lastRoundKP[b.code] || 0) + (gameState.lastRoundPP[b.code] || 0);
+                    if (ptsB !== ptsA) return ptsB - ptsA;
+                    return a.name.localeCompare(b.name);
+                });
+
+                sortedMatch.forEach((c, idx) => {
+                    let y = 135 + idx * 46;
+                    let mKP = gameState.lastRoundKP[c.code] || 0;
+                    let mPP = gameState.lastRoundPP[c.code] || 0;
+                    let mTot = mKP + mPP;
+
+                    this.add.rectangle(270, y + 16, 470, 40, idx % 2 === 0 ? 0x211c38 : 0x171426, 0.6).setOrigin(0.5);
+                    this.add.image(55, y + 16, c.code + '_c').setDisplaySize(28, 28);
+                    this.add.text(80, y + 8, c.name.length > 12 ? c.name.substring(0, 11) + '..' : c.name, { fontSize: '13px', color: '#fff', fontStyle: 'bold' }).setOrigin(0, 0);
+                    this.add.text(230, y + 8, `+${mKP}`, { fontSize: '13px', color: '#e67e22', fontStyle: 'bold' }).setOrigin(0.5, 0);
+                    this.add.text(340, y + 8, `+${mPP}`, { fontSize: '13px', color: '#3498db', fontStyle: 'bold' }).setOrigin(0.5, 0);
+                    this.add.text(450, y + 8, `${mTot} pts`, { fontSize: '14px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5, 0);
+                });
+
+                let nextBtn = this.add.rectangle(270, 900, 320, 55, 0x27ae60).setInteractive();
+                this.add.text(270, 900, '👀 VIEW OVERALL STANDINGS', { fontSize: '18px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);
+                nextBtn.on('pointerdown', () => { gameState.showMatchReport = false; saveGameState(); this.scene.restart(); });
+            }
+
+            renderOverallLeaderboard() {
+                let nextMatchNum = gameState.brRound + 1;
+                let isLastRoundFinished = gameState.brRound >= gameState.maxBrRounds || (gameState.tourneyPhase === 3 && gameState.grandFinalEarlyWinner);
+
+                let headerTxt = gameState.tourneyPhase > 0 ? (gameState.tourneyPhase === 3 ? '🏆 GRAND FINAL' : `🏆 GROUP ${String.fromCharCode(65 + gameState.currentGroupIdx)}`) : '🏆 BATTLE ROYALE';
+                this.add.text(270, 35, headerTxt, { fontSize: '26px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
+                this.add.text(270, 70, isLastRoundFinished ? 'FINAL STANDINGS' : `OVERALL STANDINGS (Before Match ${nextMatchNum})`, { fontSize: '16px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+
+                this.add.text(25, 110, 'Rank', { fontSize: '10px', color: '#888' }).setOrigin(0, 0);
+                this.add.text(105, 110, 'Country', { fontSize: '10px', color: '#888' }).setOrigin(0, 0);
+                this.add.text(220, 110, 'Total Kills', { fontSize: '10px', color: '#f39c12' }).setOrigin(0.5, 0);
+                this.add.text(280, 110, 'Place Pts', { fontSize: '10px', color: '#3498db' }).setOrigin(0.5, 0);
+                this.add.text(350, 110, 'Total Points', { fontSize: '10px', color: '#FFD700' }).setOrigin(0.5, 0);
+                this.add.text(420, 110, 'Wins', { fontSize: '10px', color: '#fff' }).setOrigin(0.5, 0);
+
+                let totalKills = {}; let totalPlace = {};
+                gameState.brCountries.forEach(c => { totalKills[c.code] = 0; totalPlace[c.code] = 0; });
+                if (gameState.roundStats) {
+                    gameState.roundStats.forEach(round => {
+                        for (let code in round.kp) totalKills[code] += (round.kp[code] || 0);
+                        for (let code in round.pp) totalPlace[code] += (round.pp[code] || 0);
+                    });
+                }
+
+                let sorted = [...gameState.brCountries].sort((a, b) => {
+                    let diff = (gameState.brScores[b.code] || 0) - (gameState.brScores[a.code] || 0);
+                    if (diff !== 0) return diff;
+                    return a.name.localeCompare(b.name);
+                });
+                
+                let advLimit = getAdvancingCount();
+
+                sorted.forEach((c, i) => {
+                    let y = 125 + i * 47;
+                    let isQualifying = (gameState.tourneyPhase > 0 && i < advLimit);
+                    let rowColor = isQualifying ? 0x143d24 : (i % 2 === 0 ? 0x15152a : 0x111122);
+                    let rowAlpha = isQualifying ? 0.85 : 0.5;
+
+                    let rowBg = this.add.rectangle(270, y + 18, 470, 41, rowColor, rowAlpha).setOrigin(0.5);
+                    if (isQualifying) rowBg.setStrokeStyle(1.5, 0x2ecc71, 0.7);
+
+                    let rankCol = i === 0 ? 0xFFD700 : i === 1 ? 0xC0C0C0 : i === 2 ? 0xCD7F32 : 0x444466;
+                    this.add.circle(25, y + 18, 13, rankCol);
+                    this.add.text(25, y + 18, `${i+1}`, { fontSize: '11px', fontStyle: 'bold', color: i < 3 ? '#000' : '#fff' }).setOrigin(0.5);
+
+                    let prevRank = gameState.prevRankMap[c.code] || i + 1;
+                    let arrowStr = rankArrow(i + 1, prevRank);
+                    let arrowCol = (prevRank - (i + 1) > 0) ? '#2ecc71' : (prevRank - (i + 1) < 0 ? '#e74c3c' : '#888');
+                    this.add.text(46, y + 12, arrowStr, { fontSize: '11px', fontStyle: 'bold', color: arrowCol }).setOrigin(0, 0);
+
+                    this.add.image(80, y + 18, c.code + '_c').setDisplaySize(30, 30);
+                    
+                    let displayColor = isQualifying ? '#2ecc71' : '#ffffff';
+                    let nameStr = c.name.length > 12 ? c.name.substring(0, 11) + '..' : c.name;
+                    if (gameState.tourneyPhase === 3 && gameState.brScores[c.code] >= 92 && !isLastRoundFinished) {
+                        nameStr += " (⚡MP)";
+                    }
+                    this.add.text(105, y + 10, nameStr, { fontSize: '13px', color: displayColor, fontStyle: 'bold' }).setOrigin(0, 0);
+
+                    this.add.text(220, y + 10, `${totalKills[c.code]}`, { fontSize: '13px', color: '#f39c12' }).setOrigin(0.5, 0);
+                    this.add.text(280, y + 10, `${totalPlace[c.code]}`, { fontSize: '13px', color: '#3498db' }).setOrigin(0.5, 0);
+                    this.add.text(350, y + 10, `${gameState.brScores[c.code]}`, { fontSize: '14px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5, 0);
+                    this.add.text(420, y + 10, `🏆×${gameState.wins[c.code] || 0}`, { fontSize: '11px', color: '#fff' }).setOrigin(0.5, 0);
+                });
+
+                let btn = this.add.rectangle(270, 905, 320, 55, 0x7d3c98).setInteractive();
+                let label = isLastRoundFinished ? '🏁 PROCEED TO FINAL STANDINGS' : `▶ START MATCH ${nextMatchNum}`;
+                this.add.text(270, 905, label, { fontSize: '18px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);
+                
+                btn.on('pointerdown', () => {
+                    if (isLastRoundFinished) this.scene.start('BRFinalScene');
+                    else { gameState.brRound++; saveGameState(); this.scene.start('BRGameScene'); }
+                });
+            }
+        }
+
+        // ── BATTLE ROYALE GAME SCENE ──
+        class BRGameScene extends Phaser.Scene {
+            constructor() { super('BRGameScene'); }
+            create() {
+                this.cameras.main.setBackgroundColor('#8ab4f8');
+                this.matter.world.setGravity(0, 0);
+                this.activeBalls = []; this.floorItems = []; this.isRoundOver = false;
+                this.finishOrder = []; this.dmg = {}; this.killFeedLog = []; this.activePopups = 0;
+                
+                // FULL SCREEN CIRCLE INITIALIZATION
+                this.CX = 270; this.CY = 500; this.RR = 250; 
+
+                document.getElementById('kill-feed-container').style.display = 'block';
+                document.getElementById('kill-feed-list').innerHTML = '';
+                this.events.on('shutdown', () => { document.getElementById('kill-feed-container').style.display = 'none'; });
+
+                this.createBG();
+                this.ringGfx = this.add.graphics().setDepth(10);
+                this.ringBodies = []; this.currentZoneStage = 0;
+                this.updateRingRadius(this.RR);
+                
+                this.spawnBalls();
+                this.createHUD();
+                this.createRankingPanel();
+
+                this.itemT = this.time.addEvent({ delay: 3000, loop: true, callback: this.spawnItems, callbackScope: this });
+                this.shootT = this.time.addEvent({ delay: 800, loop: true, callback: this.doShooting, callbackScope: this });
+                this.time.delayedCall(500, this.spawnItems, null, this);
+                this.updateRankingPanel();
+            }
+
+            createBG() { let g = this.add.graphics(); g.fillStyle(0x1a1a2e, 1); g.fillRect(0, 0, 540, 110); }
+
+            updateRingRadius(newRadius) {
+                this.RR = newRadius;
+                if (this.ringBodies) { this.ringBodies.forEach(b => this.matter.world.remove(b)); }
+                this.ringBodies = [];
+                const NS = 72;
+                for (let i = 0; i < NS; i++) {
+                    let a = (i / NS) * Math.PI * 2, x = this.CX + Math.cos(a) * this.RR, y = this.CY + Math.sin(a) * this.RR;
+                    let b = this.matter.add.rectangle(x, y, (Math.PI * 2 * this.RR / NS) + 3, 14, { isStatic: true, angle: a, friction: 0, restitution: 1.1 });
+                    this.ringBodies.push(b);
+                }
+                this.activeBalls.forEach(ball => {
+                    let dist = Phaser.Math.Distance.Between(ball.body.x, ball.body.y, this.CX, this.CY);
+                    if (dist > this.RR - 22) {
+                        let angle = Phaser.Math.Angle.Between(this.CX, this.CY, ball.body.x, ball.body.y);
+                        ball.body.setPosition(this.CX + Math.cos(angle) * (this.RR - 35), this.CY + Math.sin(angle) * (this.RR - 35));
+                        ball.body.setVelocity(-Math.cos(angle) * 3, -Math.sin(angle) * 3);
+                    }
+                });
+            }
+
+            spawnBalls() {
+                let spawnList = gameState.brCountries; let loadedStates = null;
+                if (gameState.midMatch && gameState.midMatch.active && gameState.midMatch.round === gameState.brRound) {
+                    this.dmg = gameState.midMatch.dmg || {}; this.finishOrder = gameState.midMatch.finishOrder || [];
+                    this.killFeedLog = gameState.midMatch.killFeedLog || []; this.killFeedLog.forEach(log => this.updateKillFeedUI());
+                    loadedStates = gameState.midMatch.players || [];
+                    spawnList = gameState.brCountries.filter(c => loadedStates.some(p => p.code === c.code));
+                } else { gameState.brCountries.forEach(c => this.dmg[c.code] = 0); this.finishOrder = []; }
+
+                spawnList.forEach((c, idx) => {
+                    let a = (idx / 16) * Math.PI * 2; let r = Phaser.Math.Between(30, 150);
+                    let pState = loadedStates ? loadedStates.find(p => p.code === c.code) : null;
+                    let sx = pState ? pState.x : (this.CX + Math.cos(a) * r);
+                    let sy = pState ? pState.y : (this.CY + Math.sin(a) * r);
+                    let vis = this.add.image(sx, sy, c.code + '_c').setDisplaySize(30, 30).setDepth(5);
+                    let body = this.matter.add.gameObject(vis, { shape: { type: 'circle', radius: 15 }, restitution: 1.1, friction: 0, density: 0.01 });
+                    let vx = pState ? pState.vx : Math.cos(Phaser.Math.Between(0, 359) * (Math.PI / 180)) * 2.5;
+                    let vy = pState ? pState.vy : Math.sin(Phaser.Math.Between(0, 359) * (Math.PI / 180)) * 2.5;
+                    body.setVelocity(vx, vy);
+                    this.activeBalls.push({ body, data: c, hp: pState ? pState.hp : 4, hasGun: pState ? pState.hasGun : false, ammo: pState ? pState.ammo : 0, hasShield: pState ? pState.hasShield : false, bullets: [] });
+                });
+            }
+
+            createHUD() {
+                let phaseTxt = gameState.tourneyPhase > 0 ? (gameState.tourneyPhase === 3 ? `GRAND FINAL` : `TOURNAMENT MATCH`) : 'CUSTOM MATCH';
+                this.add.text(270, 30, `${phaseTxt} | ${gameState.brRound} of ${gameState.maxBrRounds}`, { fontFamily: 'monospace', fontSize: '18px', fontStyle: 'bold', color: '#ffffff' }).setOrigin(0.5).setDepth(21);
+                this.aliveT = this.add.text(12, 70, `ALIVE: ${this.activeBalls.length}`, { fontFamily: 'monospace', fontSize: '15px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0, 0.5).setDepth(21);
+                this.winnerTxt = this.add.text(this.CX, this.CY, '', { fontSize: '24px', fontStyle: 'bold', color: '#FFD700', stroke: '#000', strokeThickness: 5, align: 'center' }).setOrigin(0.5).setDepth(40).setAlpha(0);
+            }
+
+            createRankingPanel() {
+                let panelX = 365, panelY = 118, panelW = 170, panelH = 835;
+                let panelBg = this.add.graphics().setDepth(19);
+                
+                // REDUCED OPACITY FROM 0.88 TO 0.45 FOR TRANSPARENCY OVER FULL SCREEN CIRCLE
+                panelBg.fillStyle(0x0d0d1a, 0.45); panelBg.fillRoundedRect(panelX, panelY, panelW, panelH, 10);
+                this.add.text(panelX + panelW / 2, panelY + 16, '📊 LIVE RANKING', { fontSize: '13px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5).setDepth(20);
+
+                this.rankRows = []; let startY = panelY + 46;
+                for (let i = 0; i < 16; i++) {
+                    let ry = startY + i * 45;
+                    // TRANSLUCENT ROW BACKGROUND
+                    let rowBg = this.add.rectangle(panelX + panelW / 2, ry + 22, panelW - 12, 41, 0x0d0d1a, 0.35).setOrigin(0.5).setDepth(19);
+                    let posTxt = this.add.text(panelX + 8, ry + 6, `${i+1}.`, { fontSize: '11px', color: '#888' }).setOrigin(0, 0).setDepth(20);
+                    
+                    // REMOVED ARROWS FROM LIVE RANK PANEL, SHIFTED FLAG & NAME LEFT
+                    let flagImg = this.add.image(panelX + 34, ry + 22, '').setDisplaySize(18, 18).setDepth(20);
+                    let nameTxt = this.add.text(panelX + 48, ry + 6, '', { fontSize: '10px', color: '#ccc' }).setOrigin(0, 0).setDepth(20);
+                    
+                    let kpTxt = this.add.text(panelX + 66, ry + 22, '0', { fontSize: '10px', color: '#f39c12' }).setOrigin(0.5, 0).setDepth(20);
+                    let totTxt = this.add.text(panelX + 105, ry + 22, '0', { fontSize: '11px', color: '#FFD700' }).setOrigin(0.5, 0).setDepth(20);
+                    let hpTxt = this.add.text(panelX + 145, ry + 22, '♥♥♥♥', { fontSize: '10px' }).setOrigin(0.5, 0).setDepth(20);
+                    this.rankRows.push({ rowBg, posTxt, flagImg, nameTxt, kpTxt, totTxt, hpTxt });
+                }
+            }
+
+            updateRankingPanel() {
+                let advLimit = getAdvancingCount();
+
+                let sortedData = gameState.brCountries.map(c => {
+                    let ball = this.activeBalls.find(b => b.data.code === c.code);
+                    let isAlive = !!ball; let hp = isAlive ? ball.hp : 0;
+                    let basePts = gameState.brPrevScores[c.code] || 0;
+                    let currentKills = this.dmg[c.code] || 0;
+                    
+                    // FIXED: PLACEMENT POINTS ARE NO LONGER CALCULATED LIVE UNTIL TEAM ELIMINATION/MATCH ENDS
+                    return { code: c.code, name: c.name, isAlive, hp, score: basePts + currentKills, matchKills: currentKills };
+                });
+                
+                sortedData.sort((a, b) => {
+                    let diff = b.score - a.score;
+                    if (diff !== 0) return diff;
+                    if (b.isAlive !== a.isAlive) return b.isAlive - a.isAlive;
+                    return a.name.localeCompare(b.name);
+                });
+
+                sortedData.forEach((data, i) => {
+                    let row = this.rankRows[i]; row.posTxt.setText(`${i+1}.`);
+                    if (this.textures.exists(data.code + '_c')) row.flagImg.setTexture(data.code + '_c');
+                    
+                    // EXTENDED CHARACTER COUNT DUE TO ARROW REMOVAL
+                    let dispName = data.name.length > 8 ? data.name.substring(0, 7) + '.' : data.name;
+                    if (gameState.tourneyPhase === 3 && gameState.brScores[data.code] >= 92) { dispName += "⭐"; }
+                    row.nameTxt.setText(dispName);
+                    
+                    row.kpTxt.setText(`${data.matchKills}`); row.totTxt.setText(`${data.score}`);
+                    let isQualifyingZone = (gameState.tourneyPhase > 0 && i < advLimit);
+
+                    if (data.isAlive) {
+                        row.nameTxt.setColor('#ffffff');
+                        row.rowBg.setFillStyle(isQualifyingZone ? 0x143d24 : 0x152040, 0.4);
+                        let hearts = ''; for(let h=0; h<4; h++) hearts += (h < data.hp ? '♥' : '♡');
+                        row.hpTxt.setText(hearts).setColor(data.hp > 2 ? '#2ecc71' : '#f39c12');
+                    } else {
+                        row.nameTxt.setColor('#999999'); row.rowBg.setFillStyle(0x1a0a0a, 0.3); row.hpTxt.setText('💀').setColor('#7f8c8d');
+                    }
+                });
+            }
+
+            saveMidMatch() {
+                if (this.isRoundOver) return;
+                gameState.midMatch = {
+                    active: true, round: gameState.brRound, dmg: this.dmg, finishOrder: this.finishOrder, killFeedLog: this.killFeedLog,
+                    players: this.activeBalls.map(b => ({ code: b.data.code, hp: b.hp, hasGun: b.hasGun, ammo: b.ammo, hasShield: b.hasShield, x: b.body.x, y: b.body.y, vx: b.body.body.velocity.x, vy: b.body.body.velocity.y }))
+                };
+                saveGameState();
+            }
+
+            spawnItems() {
+                if (this.isRoundOver) return;
+                
+                let gunAngles = [];
+                for(let i = 0; i < 2; i++) {
+                    let a = Phaser.Math.FloatBetween(0, Math.PI * 2);
+                    if (i === 1 && gunAngles[0]) {
+                        while (Math.abs(a - gunAngles[0]) < 0.6) { a = Phaser.Math.FloatBetween(0, Math.PI * 2); }
+                    }
+                    gunAngles.push(a);
+                    let d = Phaser.Math.FloatBetween(25, this.RR - 35);
+                    let ix = this.CX + Math.cos(a) * d, iy = this.CY + Math.sin(a) * d;
+                    let lbl = this.add.text(ix, iy, '🔫', { fontSize: '16px' }).setOrigin(0.5).setDepth(4);
+                    this.floorItems.push({ x: ix, y: iy, type: 'gun', ammo: Phaser.Math.Between(2, 3), lbl, active: true });
+                }
+
+                let sa = Phaser.Math.FloatBetween(0, Math.PI * 2);
+                let sd = Phaser.Math.FloatBetween(25, this.RR - 35);
+                let sx = this.CX + Math.cos(sa) * sd, sy = this.CY + Math.sin(sa) * sd;
+                let slbl = this.add.text(sx, sy, '🛡', { fontSize: '16px' }).setOrigin(0.5).setDepth(4);
+                this.floorItems.push({ x: sx, y: sy, type: 'shield', ammo: 0, lbl: slbl, active: true });
+            }
+
+            doShooting() {
+                if (this.isRoundOver) return;
+                this.activeBalls.forEach(ball => {
+                    if (!ball.hasGun || ball.ammo <= 0) return;
+                    let nearest = null, minD = 9999;
+                    this.activeBalls.forEach(o => { if (o !== ball) { let d = Phaser.Math.Distance.Between(ball.body.x, ball.body.y, o.body.x, o.body.y); if (d < minD) { minD = d; nearest = o; } } });
+                    if (!nearest) return;
+                    let dx = nearest.body.x - ball.body.x, dy = nearest.body.y - ball.body.y;
+                    let len = Math.sqrt(dx * dx + dy * dy); dx /= len; dy /= len;
+                    let bg = this.add.circle(ball.body.x, ball.body.y, 2, 0xffffff).setDepth(9);
+                    ball.ammo--; if (ball.ammo <= 0) ball.hasGun = false;
+                    ball.bullets.push({ gfx: bg, vx: dx * 6.5, vy: dy * 6.5, life: 60, owner: ball });
+                });
+            }
+
+            pickupItems() {
+                this.activeBalls.forEach(ball => {
+                    this.floorItems.forEach(item => {
+                        if (!item.active) return;
+                        if (Phaser.Math.Distance.Between(ball.body.x, ball.body.y, item.x, item.y) < 22) {
+                            item.active = false; item.lbl.destroy();
+                            if (item.type === 'gun') { ball.hasGun = true; ball.ammo += item.ammo; } else { ball.hasShield = true; }
+                        }
+                    });
+                });
+                this.floorItems = this.floorItems.filter(i => i.active);
+            }
+
+            showElimPopup(countryData, rank) {
+                let container = this.add.container(-250, 900).setDepth(100);
+                let bg = this.add.rectangle(0, 0, 170, 40, 0xe74c3c, 0.9).setOrigin(0, 0.5);
+                let flag = this.add.image(20, 0, countryData.code + '_c').setDisplaySize(24, 24);
+                let txt = this.add.text(42, 0, `#${rank} ${countryData.name.substring(0,8)}`, { fontSize: '12px', fontStyle: 'bold', color: '#fff' }).setOrigin(0, 0.5);
+                container.add([bg, flag, txt]); this.activePopups++; container.y = 850 - (this.activePopups * 48);
+                this.tweens.add({ targets: container, x: 10, duration: 300, ease: 'Back.easeOut', onComplete: () => {
+                    this.time.delayedCall(2000, () => { this.tweens.add({ targets: container, x: -250, alpha: 0, duration: 300, onComplete: () => { container.destroy(); this.activePopups = Math.max(0, this.activePopups-1); } }); });
+                }});
+            }
+
+            updateBullets() {
+                this.activeBalls.forEach(ball => {
+                    for (let i = ball.bullets.length - 1; i >= 0; i--) {
+                        let b = ball.bullets[i]; b.gfx.x += b.vx; b.gfx.y += b.vy; b.life--;
+                        if (b.life <= 0) { b.gfx.destroy(); ball.bullets.splice(i, 1); continue; }
+                        for (let j = 0; j < this.activeBalls.length; j++) {
+                            let other = this.activeBalls[j]; if (other === ball) continue;
+                            if (Phaser.Math.Distance.Between(b.gfx.x, b.gfx.y, other.body.x, other.body.y) < 17) {
+                                b.gfx.destroy(); ball.bullets.splice(i, 1);
+                                if (other.hasShield) { other.hasShield = false; } 
+                                else {
+                                    other.hp = Math.max(0, other.hp - 1);
+                                    this.dmg[ball.data.code] = (this.dmg[ball.data.code] || 0) + 1;
+                                    this.addToFeed(`${this.shortenName(ball.data.name)} <span class="gun-flipped">🔫</span> ${this.shortenName(other.data.name)}`);
+                                    this.updateRankingPanel();
+                                }
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
+
+            addToFeed(htmlText) { this.killFeedLog.push(htmlText); if (this.killFeedLog.length > 5) this.killFeedLog.shift(); this.updateKillFeedUI(); }
+            updateKillFeedUI() { document.getElementById('kill-feed-list').innerHTML = this.killFeedLog.map(s => `<div class="feed-item">- ${s}</div>`).join(''); }
+            shortenName(name) { return name.length > 7 ? name.substring(0, 6) + '.' : name; }
+
+            update() {
+                if (this.isRoundOver) return;
+                this.pickupItems(); this.updateBullets();
+
+                // DYNAMIC SCALE ADJUSTMENTS FOR 12, 8, AND 4 TEAMS
+                if (this.activeBalls.length <= 12 && this.currentZoneStage === 0) {
+                    this.currentZoneStage = 1; this.updateRingRadius(190); this.cameras.main.flash(300, 231, 76, 60);
+                } else if (this.activeBalls.length <= 8 && this.currentZoneStage === 1) {
+                    this.currentZoneStage = 2; this.updateRingRadius(130); this.cameras.main.flash(300, 231, 76, 60);
+                } else if (this.activeBalls.length <= 4 && this.currentZoneStage === 2) {
+                    this.currentZoneStage = 3; this.updateRingRadius(80); this.cameras.main.flash(300, 231, 76, 60);
+                }
+
+                this.ringGfx.clear(); this.ringGfx.lineStyle(16, 0x000000, 1); this.ringGfx.strokeCircle(this.CX, this.CY, this.RR);
+                
+                for (let i = this.activeBalls.length - 1; i >= 0; i--) {
+                    let ball = this.activeBalls[i];
+                    let dist = Phaser.Math.Distance.Between(ball.body.x, ball.body.y, this.CX, this.CY);
+                    if (ball.hp <= 0 || dist > this.RR + 20) {
+                        let rank = this.activeBalls.length; this.showElimPopup(ball.data, rank);
+                        ball.body.destroy(); this.finishOrder.push(ball.data.code);
+                        if (dist > this.RR + 20) this.addToFeed(`💀 Ring ${this.shortenName(ball.data.name)}`);
+                        this.activeBalls.splice(i, 1);
+                        this.aliveT.setText(`ALIVE: ${this.activeBalls.length}`);
+                        this.updateRankingPanel();
+                    } else {
+                        let vel = new Phaser.Math.Vector2(ball.body.body.velocity.x, ball.body.body.velocity.y);
+                        vel.x += Phaser.Math.FloatBetween(-0.1, 0.1); vel.y += Phaser.Math.FloatBetween(-0.1, 0.1);
+                        let spd = vel.length();
+                        if (spd < 2.2) vel.normalize().scale(2.5); else if (spd > 4.0) vel.normalize().scale(4.0);
+                        ball.body.setVelocity(vel.x, vel.y);
+                    }
+                }
+
+                if (this.activeBalls.length <= 1) {
+                    this.isRoundOver = true;
+                    if (this.activeBalls.length === 1) this.finishOrder.push(this.activeBalls[0].data.code);
+                    this.endRound();
+                }
+            }
+
+            endRound() {
+                gameState.prevRankMap = computeRankMap(gameState.brScores, gameState.brCountries);
+                
+                let ptMap = { 1: 10, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1, 8: 1 };
+                let winnerCode = this.finishOrder[this.finishOrder.length - 1];
+                gameState.wins[winnerCode] = (gameState.wins[winnerCode] || 0) + 1;
+
+                if (gameState.tourneyPhase === 3 && gameState.brPrevScores[winnerCode] >= 92) {
+                    gameState.grandFinalEarlyWinner = winnerCode;
+                }
+
+                if (!gameState.globalStats) gameState.globalStats = { kills: {}, wins: {}, placementPts: {} };
+                gameState.lastRoundKP = {}; gameState.lastRoundPP = {};
+                let roundKP = {}; let roundPP = {};
+
+                // PLACEMENT POINTS ARE OFFICIALLY APPLIED AND CALCULATED HERE AT MATCH COMPLETION
+                this.finishOrder.forEach((code, idx) => {
+                    let placement = gameState.brCountries.length - idx; 
+                    let pp = ptMap[placement] || 0; let kp = this.dmg[code] || 0;
+                    
+                    gameState.brScores[code] = (gameState.brScores[code] || 0) + kp + pp;
+                    gameState.brPrevScores[code] = gameState.brScores[code];
+                    gameState.lastRoundKP[code] = kp; gameState.lastRoundPP[code] = pp;
+                    roundKP[code] = kp; roundPP[code] = pp;
+
+                    gameState.globalStats.kills[code] = (gameState.globalStats.kills[code] || 0) + kp;
+                    gameState.globalStats.placementPts[code] = (gameState.globalStats.placementPts[code] || 0) + pp;
+                });
+                gameState.globalStats.wins[winnerCode] = (gameState.globalStats.wins[winnerCode] || 0) + 1;
+                
+                gameState.roundStats.push({ kp: roundKP, pp: roundPP });
+                gameState.midMatch = null; gameState.showMatchReport = true;
+                saveGameState();
+
+                let winnerObj = gameState.brCountries.find(c => c.code === winnerCode);
+                this.winnerTxt.setText(`🏆 MATCH WINNER\n${winnerObj ? winnerObj.name : '???'}`).setAlpha(1);
+                
+                if (this.itemT) this.itemT.remove(); if (this.shootT) this.shootT.remove();
+                this.time.delayedCall(2500, () => this.scene.start('BRRoundSelectScene'));
+            }
+        }
+
+        // ── TOURNAMENT STATS DASHBOARD ──
+        class TourneyStatsScene extends Phaser.Scene {
+            constructor() { super('TourneyStatsScene'); this.currentTab = 'kills'; }
+            create() {
+                let g = this.add.graphics(); g.fillGradientStyle(0x0a0a18, 0x0a0a18, 0x111e38, 0x111e38, 1); g.fillRect(0, 0, 540, 960);
+                this.add.text(270, 40, '📊 ALL-TIME TOURNAMENT LEADERBOARD', { fontSize: '22px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
+                this.add.text(270, 70, 'Overall records tracked across all matches played', { fontSize: '13px', color: '#888' }).setOrigin(0.5);
+
+                this.createTabBtn(95, 120, '⚔️ KILLS', 'kills');
+                this.createTabBtn(270, 120, '🏆 WINS', 'wins');
+                this.createTabBtn(445, 120, '🎯 PLACEMENTS', 'placements');
+
+                this.renderStatsList();
+
+                let backBtn = this.add.rectangle(270, 900, 320, 50, 0xe74c3c).setInteractive();
+                this.add.text(270, 900, '🏠 RETURN TO TOURNAMENT', { fontSize: '16px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);
+                backBtn.on('pointerdown', () => this.scene.start('TourneyScene'));
+            }
+            createTabBtn(x, y, label, tabKey) {
+                let isActive = this.currentTab === tabKey;
+                let btn = this.add.rectangle(x, y, 150, 36, isActive ? 0x2e86de : 0x22223bb, 0.8).setInteractive();
+                btn.setStrokeStyle(1.5, isActive ? 0x54a0ff : 0x444455);
+                this.add.text(x, y, label, { fontSize: '12px', fontStyle: 'bold', color: isActive ? '#fff' : '#aaa' }).setOrigin(0.5);
+                btn.on('pointerdown', () => { this.currentTab = tabKey; this.scene.restart(); });
+            }
+            renderStatsList() {
+                if (!gameState.globalStats) gameState.globalStats = { kills: {}, wins: {}, placementPts: {} };
+                let sourceData = []; let statLabel = ''; let statColor = '#fff';
+
+                if (this.currentTab === 'kills') {
+                    sourceData = Object.keys(gameState.globalStats.kills).map(code => ({ code, val: gameState.globalStats.kills[code] }));
+                    statLabel = 'Total Confirmed Kills'; statColor = '#e67e22';
+                } else if (this.currentTab === 'wins') {
+                    sourceData = Object.keys(gameState.globalStats.wins).map(code => ({ code, val: gameState.globalStats.wins[code] }));
+                    statLabel = 'Matches Won (1st Place)'; statColor = '#f1c40f';
+                } else {
+                    sourceData = Object.keys(gameState.globalStats.placementPts).map(code => ({ code, val: gameState.globalStats.placementPts[code] }));
+                    statLabel = 'Total Accumulated Placement Pts'; statColor = '#3498db';
+                }
+
+                sourceData.sort((a, b) => b.val - a.val); let top10 = sourceData.slice(0, 10);
+                this.add.text(270, 175, `✨ TOP 10 BEST TEAMS (${statLabel.toUpperCase()})`, { fontSize: '13px', fontStyle: 'bold', color: '#2ecc71' }).setOrigin(0.5);
+
+                if (top10.length === 0) {
+                    this.add.text(270, 450, 'No statistics recorded yet.\nComplete matches to populate data!', { fontSize: '15px', color: '#666', align: 'center' }).setOrigin(0.5); return;
+                }
+                top10.forEach((item, idx) => {
+                    let y = 205 + idx * 56; let matchCountry = allCountries.find(c => c.code === item.code) || { name: item.code };
+                    this.add.rectangle(270, y + 22, 460, 48, idx < 3 ? 0x1f2438 : 0x131726, 0.7).setOrigin(0.5).setStrokeStyle(1, idx === 0 ? 0xf1c40f : 0x333);
+                    let rankIcon = idx === 0 ? '👑 1.' : idx === 1 ? '🥈 2.' : idx === 2 ? '🥉 3.' : `   ${idx+1}.`;
+                    this.add.text(35, y + 13, rankIcon, { fontSize: '14px', fontStyle: 'bold', color: idx === 0 ? '#f1c40f' : '#ccc' }).setOrigin(0, 0);
+                    if (this.textures.exists(item.code + '_c')) this.add.image(95, y + 22, item.code + '_c').setDisplaySize(32, 32);
+                    this.add.text(125, y + 14, matchCountry.name, { fontSize: '14px', fontStyle: 'bold', color: '#fff' }).setOrigin(0, 0);
+                    this.add.text(465, y + 12, `${item.val}`, { fontSize: '18px', fontStyle: 'bold', color: statColor }).setOrigin(1, 0);
+                });
+            }
+        }
+
+        // ── BATTLE ROYALE FINAL RESULTS SCENE ──
+        class BRFinalScene extends Phaser.Scene {
+            constructor() { super('BRFinalScene'); }
+            create() {
+                let titleTxt = gameState.tourneyPhase > 0 ? `🏆 GRAND FINAL RESULTS 🏆` : '🏆 BATTLE ROYALE';
+                let g = this.add.graphics(); g.fillGradientStyle(0x0a0a18, 0x0a0a18, 0x1a0530, 0x0a1a10, 1); g.fillRect(0, 0, 540, 960);
+                this.add.text(270, 38, titleTxt, { fontSize: '24px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
+
+                let sorted = [...gameState.brCountries].sort((a, b) => {
+                    let diff = (gameState.brScores[b.code] || 0) - (gameState.brScores[a.code] || 0);
+                    if (diff !== 0) return diff;
+                    return a.name.localeCompare(b.name);
+                });
+                
+                if (gameState.tourneyPhase === 3 && gameState.grandFinalEarlyWinner) {
+                    let championIdx = sorted.findIndex(c => c.code === gameState.grandFinalEarlyWinner);
+                    if (championIdx !== -1) {
+                        let championObj = sorted.splice(championIdx, 1)[0];
+                        sorted.unshift(championObj);
+                    }
+                }
+
+                let advLimit = getAdvancingCount();
+
+                sorted.forEach((c, i) => {
+                    let y = 100 + i * 46;
+                    let isQualifying = (gameState.tourneyPhase === 3 && i === 0) || (gameState.tourneyPhase < 3 && gameState.tourneyPhase > 0 && i < advLimit);
+                    let bgCol = isQualifying ? 0x143d24 : (i % 2 === 0 ? 0x111122 : 0x0d0d1a);
+
+                    this.add.rectangle(270, y + 18, 460, 40, bgCol).setOrigin(0.5);
+                    this.add.text(32, y + 10, `${i+1}.`, { fontSize: '13px', color: isQualifying ? '#2ecc71' : '#666' }).setOrigin(0, 0);
+                    if (this.textures.exists(c.code + '_c')) this.add.image(58, y + 18, c.code + '_c').setDisplaySize(26, 26);
+                    
+                    let suffix = (gameState.tourneyPhase === 3 && i === 0) ? " 🏆 CHAMPION" : "";
+                    this.add.text(78, y + 8, c.name + suffix, { fontSize: '13px', color: isQualifying ? '#2ecc71' : '#aaa', fontStyle: isQualifying ? 'bold' : 'normal' }).setOrigin(0, 0);
+                    this.add.text(420, y + 8, `${gameState.brScores[c.code]} pts`, { fontSize: '13px', color: '#FFD700', fontStyle: 'bold' }).setOrigin(0, 0);
+                });
+
+                let btnTxt = gameState.tourneyPhase > 0 ? '▶ CONTINUE BRACKET' : '🏠 BACK TO MENU';
+                let btn = this.add.rectangle(270, 915, 320, 54, 0x7d3c98).setInteractive();
+                this.add.text(270, 915, btnTxt, { fontSize: '18px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);
+                btn.on('pointerdown', () => {
+                    if (gameState.tourneyPhase > 0) this.scene.start('TourneyScene');
+                    else { gameState.tourneyPhase = 0; saveGameState(); this.scene.start('MenuScene'); }
+                });
+            }
+        }
+
+        // ── NORMAL MODE SCENE ──
+        class GameScene extends Phaser.Scene {
+            constructor() { super('GameScene'); }
+            create() {
+                this.cameras.main.setBackgroundColor('#7aabf5'); this.matter.world.setGravity(0, 0); this.activeBalls = []; this.isGameOver = false; this.activePopups = 0;
+                this.add.rectangle(0, 0, 540, 88, 0x000000, 0.88).setOrigin(0).setDepth(20);
+                this.aliveText = this.add.text(270, 60, `ALIVE: ${gameState.activeRoster.length}`, { fontSize: '18px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5).setDepth(20);
+                this.elimBox = this.add.text(8, 96, 'ELIMINATED:\n', { fontSize: '14px', color: '#fff', wordWrap: { width: 180 } }).setOrigin(0, 0).setDepth(20);
+                this.winnerTxt = this.add.text(270, 480, '', { fontSize: '38px', color: '#FFD700', fontStyle: 'bold', stroke: '#000', strokeThickness: 8 }).setOrigin(0.5).setDepth(30);
+                this.CX = 270; this.CY = 515; this.RR = 230;
+                this.createRing(); this.spawnBalls();
+            }
+            createRing() {
+                this.ringGfx = this.add.graphics().setDepth(10); this.ringGfx.lineStyle(14, 0x000000, 1); this.ringGfx.strokeCircle(this.CX, this.CY, this.RR);
+                const NS = 72;
+                for (let i = 0; i < NS; i++) {
+                    let a = (i / NS) * Math.PI * 2, x = this.CX + Math.cos(a) * this.RR, y = this.CY + Math.sin(a) * this.RR;
+                    this.matter.add.rectangle(x, y, (Math.PI * 2 * this.RR / NS) + 3, 13, { isStatic: true, angle: a, friction: 0, restitution: 1.1 });
+                }
+            }
+            spawnBalls() {
+                gameState.activeRoster.forEach(c => {
+                    let sx = this.CX + Phaser.Math.Between(-120, 120), sy = this.CY + Phaser.Math.Between(-120, 120);
+                    let vis = this.add.image(sx, sy, c.code + '_c').setDisplaySize(28, 28).setDepth(5);
+                    let body = this.matter.add.gameObject(vis, { shape: { type: 'circle', radius: 14 }, restitution: 1.1, friction: 0, density: 0.01 });
+                    body.setVelocity(Math.cos(Phaser.Math.Between(0, 359)*(Math.PI/180))*2.5, Math.sin(Phaser.Math.Between(0, 359)*(Math.PI/180))*2.5);
+                    this.activeBalls.push({ body, data: c });
+                });
+            }
+            update() {
+                if (this.isGameOver) return;
+                for (let i = this.activeBalls.length - 1; i >= 0; i--) {
+                    let ball = this.activeBalls[i];
+                    if (Phaser.Math.Distance.Between(ball.body.x, ball.body.y, this.CX, this.CY) > this.RR + 18) {
+                        gameState.eliminatedNames.push(ball.data.name);
+                        this.elimBox.setText('ELIMINATED:\n' + [...gameState.eliminatedNames].reverse().map(n => `- ${n.substring(0,10)}`).join('\n'));
+                        ball.body.destroy(); this.activeBalls.splice(i, 1); this.aliveText.setText(`ALIVE: ${this.activeBalls.length}`);
+                        if (this.activeBalls.length === 1) {
+                            this.isGameOver = true; this.winnerTxt.setText(`🎉 WINNER 🎉\n${this.activeBalls[0].data.name}`);
+                            this.time.delayedCall(3000, () => this.scene.start('MenuScene'));
+                        }
+                    }
+                }
+            }
+        }
+
+        const config = {
+            type: Phaser.AUTO,
+            scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, width: 540, height: 960 },
+            physics: { default: 'matter', matter: { debug: false } },
+            scene: [MenuScene, GameScene, TourneyScene, BRRoundSelectScene, BRGameScene, TourneyStatsScene, BRFinalScene, HistoryScene, SeasonDetailScene]
+        };
+        window.phaserGame = new Phaser.Game(config);
+    </script>
+</body>
+</html>
