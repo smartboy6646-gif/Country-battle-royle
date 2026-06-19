@@ -7,11 +7,18 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background: #0d0d1a; display: flex; justify-content: center;
-            align-items: center; height: 100vh; width: 100vw; overflow: hidden;
-            font-family: 'Arial', sans-serif; touch-action: none;
-        }
+           body {
+    background: #0d0d1a; 
+    display: flex; 
+    justify-content: center;
+    align-items: center; 
+    height: 100vh; /* Fallback for older browsers */
+    height: 100dvh; /* Fix for modern mobile web apps */
+    width: 100vw; 
+    overflow: hidden;
+    font-family: 'Arial', sans-serif; 
+    touch-action: none;
+}
         canvas { max-width: 100%; max-height: 100%; display: block; }
         
         /* PICKER UI CSS */
@@ -32,7 +39,7 @@
         .cc { background: #12122a; border: 2px solid #2a2a4a; border-radius: 8px; display: flex; flex-direction: column; align-items: center; padding: 7px 3px 5px; cursor: pointer; transition: all .15s; user-select: none; -webkit-tap-highlight-color: transparent; position: relative; }
         .cc:active { transform: scale(0.95); }
         .cc.sel { background: #2d1060; border-color: #9b59b6; box-shadow: 0 0 8px #9b59b655; }
-        .cc img { width: 34px; height: 22px; object-fit: cover; border-radius: 3px; border: 1px solid #444; }
+        .cc img { width: 34px; height: 22px; object-fit: cover; border-radius: 3px; border:      1px solid #444; }
         .cc .cn { color: #bbb; font-size: 9px; text-align: center; margin-top: 3px; line-height: 1.2; }
         .cc.sel .cn { color: #dda0ff; }
         .cc .bdg { position: absolute; top: 2px; right: 3px; background: #9b59b6; color: #fff; font-size: 9px; font-weight: bold; border-radius: 50%; width: 15px; height: 15px; display: flex; align-items: center; justify-content: center; }
