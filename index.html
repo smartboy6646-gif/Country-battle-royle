@@ -4,67 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Marble Race - Tournament Edition</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@700;900&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js">
+    </script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background: #0d0d1a; display: flex; justify-content: center;
-            align-items: center; 
-            height: 100vh; /* Fallback */
-            height: 100dvh; /* Mobile browser height fix */
+            background: linear-gradient(135deg, #0c0d14 0%, #05050b 100%);
+            display: flex; justify-content: center;
+            align-items: center;
+            height: 100vh;
+            height: 100dvh;
             width: 100vw; overflow: hidden;
-            font-family: 'Arial', sans-serif; touch-action: none;
+            font-family: 'Poppins', sans-serif; touch-action: none;
         }
-        canvas { max-width: 100%; max-height: 100%; display: block; }
-        
-        /* PICKER UI CSS */
-        #picker-overlay { display: none; position: fixed; inset: 0; background: #0a0a18; z-index: 1000; flex-direction: column; align-items: center; }
-        #picker-overlay.show { display: flex; }
-        #picker-header { width: 100%; max-width: 540px; background: linear-gradient(135deg, #1a0a2e, #2d1b4e); padding: 12px 14px 10px; border-bottom: 2px solid #9b59b6; flex-shrink: 0; }
-        #picker-title { color: #FFD700; font-size: 17px; font-weight: bold; text-align: center; text-shadow: 0 0 10px #FFD700aa; }
-        #picker-count { color: #dda0ff; font-size: 13px; text-align: center; margin: 3px 0 8px; }
-        #picker-btns { display: flex; gap: 8px; justify-content: center; }
-        #picker-btns button { padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all .15s; }
-        #btn-auto { background: linear-gradient(135deg, #9b59b6, #6c3483); color: #fff; box-shadow: 0 2px 8px #9b59b655; }
-        #btn-clear { background: #444; color: #fff; }
-        #btn-start { background: linear-gradient(135deg, #27ae60, #1e8449); color: #fff; box-shadow: 0 2px 8px #27ae6055; }
-        #btn-start:disabled { background: #333; color: #555; cursor: not-allowed; box-shadow: none; }
-        #picker-search { width: 100%; max-width: 540px; padding: 8px 12px; background: #0f0f20; flex-shrink: 0; border-bottom: 1px solid #2a2a4a; }
-        #picker-search input { width: 100%; padding: 7px 12px; background: #1a1a1a; border: 1px solid #444; border-radius: 8px; color: #fff; font-size: 14px; outline: none; }
-        #picker-grid { width: 100%; max-width: 540px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 8px; }
-        .cc { background: #12122a; border: 2px solid #2a2a4a; border-radius: 8px; display: flex; flex-direction: column; align-items: center; padding: 7px 3px 5px; cursor: pointer; transition: all .15s; user-select: none; -webkit-tap-highlight-color: transparent; position: relative; }
-        .cc:active { transform: scale(0.95); }
-        .cc.sel { background: #2d1060; border-color: #9b59b6; box-shadow: 0 0 8px #9b59b655; }
-        .cc img { width: 34px; height: 22px; object-fit: cover; border-radius: 3px; border: 1px solid #444; }
-        .cc .cn { color: #bbb; font-size: 9px; text-align: center; margin-top: 3px; line-height: 1.2; }
-        .cc.sel .cn { color: #dda0ff; }
-        .cc .bdg { position: absolute; top: 2px; right: 3px; background: #9b59b6; color: #fff; font-size: 9px; font-weight: bold; border-radius: 50%; width: 15px; height: 15px; display: flex; align-items: center; justify-content: center; }
+        canvas { max-width: 100%; max-height: 100%; display: block; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
-        /* KILL FEED HTML OVERLAY */
+        #picker-overlay { display: none; position: fixed; inset: 0; background: rgba(8,9,15,0.96); z-index: 1000; flex-direction: column; align-items: center; backdrop-filter: blur(10px); }
+        #picker-overlay.show { display: flex; }
+        #picker-header { width: 100%; max-width: 540px; background: linear-gradient(135deg, #0d0e1a, #120b29); padding: 16px 14px 10px; border-bottom: 2px solid #B026FF; flex-shrink: 0; box-shadow: 0 4px 15px rgba(176,38,255,0.3); }
+        #picker-title { color: #00F3FF; font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 900; text-align: center; text-shadow: 0 0 10px rgba(0,243,255,0.5); letter-spacing: 1px; }
+        #picker-count { color: #FFF; font-size: 14px; text-align: center; margin: 5px 0 12px; font-weight: 600; }
+        #picker-btns { display: flex; gap: 8px; justify-content: center; }
+        #picker-btns button { padding: 10px 18px; border: none; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; transition: all .2s; font-family: 'Poppins', sans-serif; text-transform: uppercase; }
+        #btn-auto { background: linear-gradient(135deg, #B026FF, #7000FF); color: #fff; box-shadow: 0 4px 10px rgba(176,38,255,0.4); }
+        #btn-clear { background: #2A2A3A; color: #fff; border: 1px solid #444; }
+        #btn-start { background: linear-gradient(135deg, #00FF55, #00B33C); color: #000; box-shadow: 0 4px 10px rgba(0,255,85,0.4); }
+        #btn-start:disabled { background: #222; color: #555; cursor: not-allowed; box-shadow: none; }
+        #picker-search { width: 100%; max-width: 540px; padding: 12px; background: #07080f; flex-shrink: 0; border-bottom: 1px solid #1a1b26; }
+        #picker-search input { width: 100%; padding: 10px 15px; background: #121324; border: 1px solid #B026FF; border-radius: 8px; color: #fff; font-size: 14px; outline: none; font-family: 'Poppins', sans-serif; }
+        #picker-search input:focus { box-shadow: 0 0 10px rgba(176,38,255,0.5); }
+        #picker-grid { width: 100%; max-width: 540px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px; }
+        .cc { background: rgba(18,19,35,0.7); border: 1px solid #2a2b40; border-radius: 12px; display: flex; flex-direction: column; align-items: center; padding: 10px 5px; cursor: pointer; transition: all .2s; user-select: none; -webkit-tap-highlight-color: transparent; position: relative; backdrop-filter: blur(5px); }
+        .cc:active { transform: scale(0.92); }
+        .cc.sel { background: rgba(112,0,255,0.2); border-color: #00F3FF; box-shadow: 0 0 12px rgba(0,243,255,0.4); }
+        .cc img { width: 44px; height: 30px; object-fit: cover; border-radius: 4px; border: 1px solid #555; }
+        .cc .cn { color: #E0E0E0; font-size: 10px; font-weight: 600; text-align: center; margin-top: 6px; line-height: 1.2; }
+        .cc.sel .cn { color: #00F3FF; }
+        .cc .bdg { position: absolute; top: -5px; right: -5px; background: #FFD700; color: #000; font-size: 11px; font-weight: 800; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+
         #kill-feed-container {
-            position: absolute;
-            top: 0; left: 0; /* Dynamic position managed by JS */
-            transform-origin: top left;
-            width: 175px; pointer-events: none;
-            z-index: 2000; display: none;
-            font-family: monospace; font-size: 11px;
-            color: #ffffff; font-weight: bold;
-            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, -1px 1px 0 #000, 0px 2px 2px rgba(0,0,0,0.8);
+            position: absolute; left: 0; transform-origin: top left;
+            width: 210px; pointer-events: none; z-index: 2000; display: none;
+            font-family: 'Poppins', sans-serif;
         }
-        #kill-feed-container .title { margin-bottom: 3px; color: #ff4444; font-size: 12px; letter-spacing: 1px; }
-        #kill-feed-container .feed-item { margin-bottom: 1px; display: flex; align-items: center; opacity: 0.95; }
-        .gun-flipped { display: inline-block; transform: scaleX(-1); margin: 0 3px; font-size: 12px; }
+        #kill-feed-container .title { margin-bottom: 6px; color: #FF0055; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); display: flex; align-items: center; }
+        #kill-feed-container .title::before { content: '⚡'; margin-right: 4px; }
+        .feed-item {
+            background: linear-gradient(90deg, rgba(12,13,24,0.95), rgba(20,21,38,0.7));
+            border-left: 3px solid #00F3FF; margin-bottom: 5px; padding: 5px 8px;
+            display: flex; align-items: center; color: #FFF; font-size: 11px; font-weight: 600;
+            border-radius: 0 6px 6px 0; backdrop-filter: blur(4px); box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            animation: slideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .feed-item.ring-death { border-left-color: #FF0055; color: #FF6688; }
+        .feed-item img { width: 18px; height: 12px; margin: 0 5px; border-radius: 2px; object-fit: cover; }
+        .gun-flipped { display: inline-block; transform: scaleX(-1); margin: 0 4px; font-size: 13px; filter: drop-shadow(0 0 2px rgba(255,255,255,0.5)); }
+
+        @keyframes slideIn {
+            0% { transform: translateX(-30px) scale(0.8); opacity: 0; }
+            60% { transform: translateX(5px) scale(1.02); opacity: 1; }
+            100% { transform: translateX(0) scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
     <div id="picker-overlay">
         <div id="picker-header">
-            <div id="picker-title">⚔️ BATTLE ROYALE — Choose 16 Countries</div>
-            <div id="picker-count">Selected: <span id="sel-count">0</span> / 16</div>
+            <div id="picker-title">WORLD CUP BATTLE ROYALE</div>
+            <div id="picker-count">SELECTED TEAMS: <span id="sel-count">0</span> / 16</div>
             <div id="picker-btns">
-                <button id="btn-auto">🎲 Auto Pick</button>
-                <button id="btn-clear">✕ Clear</button>
-                <button id="btn-start" disabled>▶ START</button>
+                <button id="btn-auto">🎲 AUTO DRAFT</button>
+                <button id="btn-clear">✕ CLEAR</button>
+                <button id="btn-start" disabled>▶ START TOURNAMENT</button>
             </div>
         </div>
         <div id="picker-search"><input type="text" id="search-input" placeholder="🔍 Search country..."></div>
@@ -72,31 +84,32 @@
     </div>
 
     <div id="kill-feed-container">
-        <div class="title">⚔️ COMBAT FEED</div>
+        <div class="title">LIVE COMBAT LOG</div>
         <div id="kill-feed-list"></div>
     </div>
 
     <script>
-        // SYNC HTML OVERLAY WITH CANVAS POSITION AND SCALE
+        // GLOBAL CONFIGURATION SYSTEM
+        const CONFIG = {
+            tiktokId: '@Sunshine20775'
+        };
+
+        // SYNC HTML OVERLAY
         function syncHTMLUI() {
             const canvas = document.querySelector('canvas');
             const feed = document.getElementById('kill-feed-container');
-            
             if (canvas && feed && feed.style.display !== 'none') {
                 const rect = canvas.getBoundingClientRect();
-                const scale = rect.width / 540; // 540 is the native Phaser game width
-                
-                // Align left to canvas edge + 8px padding, and push top down to 120px 
-                // so it strictly clears the 110px dark top bar in GameScene.
-                feed.style.left = (rect.left + 8 * scale) + 'px';
-                feed.style.top = (rect.top + 120 * scale) + 'px';
+                const scale = rect.width / 540;
+                feed.style.left = (rect.left + 12 * scale) + 'px';
+                feed.style.top = (rect.top + 765 * scale) + 'px';
                 feed.style.transform = `scale(${scale})`;
             }
             requestAnimationFrame(syncHTMLUI);
         }
-        syncHTMLUI(); // Initialize tracking
+        syncHTMLUI();
 
-        const rawData = "AF:Afghanistan,AL:Albania,DZ:Algeria,AD:Andorra,AO:Angola,AR:Argentina,AM:Armenia,AU:Australia,AT:Austria,AZ:Azerbaijan,BS:Bahamas,BH:Bahrain,BD:Bangladesh,BB:Barbados,BY:Belarus,BE:Belgium,BZ:Belize,BJ:Benin,BT:Bhutan,BO:Bolivia,BA:Bosnia,BW:Botswana,BR:Brazil,BN:Brunei,BG:Bulgaria,BF:Burkina Faso,BI:Burundi,CV:Cabo Verde,KH:Cambodia,CM:Cameroon,CA:Canada,CF:Central African Rep,TD:Chad,CL:Chile,CN:China,CO:Colombia,KM:Comoros,CG:Congo,CR:Costa Rica,HR:Croatia,CU:Cuba,CY:Cyprus,CZ:Czechia,DK:Denmark,DJ:Djibouti,DM:Dominica,DO:Dominican Rep,EC:Ecuador,EG:Egypt,SV:El Salvador,GQ:Equatorial Guinea,ER:Eritrea,EE:Estonia,SZ:Eswatini,ET:Ethiopia,FJ:Fiji,FI:Finland,FR:France,GA:Gabon,GM:Gambia,GE:Georgia,DE:Germany,GH:Ghana,GR:Greece,GD:Grenada,GT:Guatemala,GN:Guinea,GW:Guinea-Bissau,GY:Guyana,HT:Haiti,HN:Honduras,HU:Hungary,IS:Iceland,IN:India,ID:Indonesia,IR:Iran,IQ:Iraq,IE:Ireland,IL:Israel,IT:Italy,JM:Jamaica,JP:Japan,JO:Jordan,KZ:Kazakhstan,KE:Kenya,KI:Kiribati,KP:North Korea,KR:South Korea,KW:Kuwait,KG:Kyrgyzstan,LA:Laos,LV:Latvia,LB:Lebanon,LS:Lesotho,LR:Liberia,LY:Libya,LI:Liechtenstein,LT:Lithuania,LU:Luxembourg,MG:Madagascar,MW:Malawi,MY:Malaysia,MV:Maldives,ML:Mali,MT:Malta,MH:Marshall Islands,MR:Mauritania,MU:Mauritius,MX:Mexico,FM:Micronesia,MD:Moldova,MC:Monaco,MN:Mongolia,ME:Montenegro,MA:Morocco,MZ:Mozambique,MM:Myanmar,NA:Namibia,NR:Nauru,NP:Nepal,NL:Netherlands,NZ:New Zealand,NI:Nicaragua,NE:Niger,NG:Nigeria,MK:North Macedonia,NO:Norway,OM:Oman,PK:Pakistan,PW:Palau,PA:Panama,PG:Papua New Guinea,PY:Paraguay,PE:Peru,PH:Philippines,PL:Poland,PT:Portugal,QA:Qatar,RO:Romania,RU:Russia,RW:Rwanda,KN:St Kitts,LC:St Lucia,VC:St Vincent,WS:Samoa,SM:San Marino,ST:Sao Tome,SA:Saudi Arabia,SN:Senegal,RS:Serbia,SC:Seychelles,SL:Sierra Leone,SG:Singapore,SK:Slovakia,SI:Slovenia,SB:Solomon Islands,SO:Somalia,ZA:South Africa,SS:South Sudan,ES:Spain,LK:Sri Lanka,SD:Sudan,SR:Suriname,SE:Sweden,CH:Switzerland,SY:Syria,TJ:Tajikistan,TZ:Tanzania,TH:Thailand,TL:Timor-Leste,TG:Togo,TO:Tonga,TT:Trinidad,TN:Tunisia,TR:Turkey,TM:Turkmenistan,TV:Tuvalu,UG:Uganda,UA:Ukraine,AE:UAE,GB:UK,US:USA,UY:Uruguay,UZ:Uzbekistan,VU:Vanuatu,VE:Venezuela,VN:Vietnam,YE:Yemen,ZM:Zambia,ZW:Zimbabwe";
+        const rawData = "AF:Afghanistan,AL:Albania,DZ:Algeria,AD:Andorra,AO:Angola,AR:Argentina,AM:Armenia,AU:Australia,AT:Austria,AZ:Azerbaijan,BS:Bahamas,BH:Bahrain,BD:Bangladesh,BB:Barbados,BY:Belarus,BE:Belgium,BZ:Belize,BJ:Benin,BT:Bhutan,BO:Bolivia,BA:Bosnia,BW:Botswana,BR:Brazil,BN:Brunei,BG:Bulgaria,BF:Burkina Faso,BI:Burundi,CV:Cabo Verde,KH:Cambodia,CM:Cameroon,CA:Canada,CF:Central African Rep,TD:Chad,CL:Chile,CN:China,CO:Colombia,KM:Comoros,CG:Congo,CR:Costa Rica,HR:Croatia,CU:Cuba,CY:Cyprus,CZ:Czechia,DK:Denmark,DJ:Djibouti,DM:Dominica,DO:Dominican Rep,EC:Ecuador,EG:Egypt,SV:El Salvador,GQ:Equatorial Guinea,ER:Eritrea,EE:Estonia,SZ:Eswatini,ET:Ethiopia,FJ:Fiji,FI:Finland,FR:France,GA:Gabon,GM:Gambia,GE:Georgia,DE:Germany,GH:Ghana,GR:Greece,GD:Grenada,GT:Guatemala,GN:Guinea,GW:Guinea-Bissau,GY:Guyana,HT:Haiti,HN:Honduras,HU:Hungary,IS:Iceland,IN:India,ID:Indonesia,IR:Iran,IQ:Iraq,IE:Ireland,IL:Israel,IT:Italy,JM:Jamaica,JP:Japan,JO:Jordan,KZ:Kazakhstan,KE:Kenya,KI:Kiribati,KP:North Korea,KR:South Korea,KW:Kuwait,KG:Kyrgyzstan,LA:Laos,LV:Latvia,LB:Lebanon,LS:Lesotho,LR:Liberia,LY:Libya,LI:Liechtenstein,LT:Lithuania,LU:Luxembourg,MG:Madagascar,MW:Malawi,MY:Malaysia,MV:Maldives,ML:Mali,MT:Malta,MH:Marshall Islands,MR:Mauritania,MU:Marshall Islands,MX:Mexico,FM:Micronesia,MD:Moldova,MC:Monaco,MN:Mongolia,ME:Montenegro,MA:Morocco,MZ:Mozambique,MM:Myanmar,NA:Namibia,NR:Nauru,NP:Nepal,NL:Netherlands,NZ:New Zealand,NI:Nicaragua,NE:Niger,NG:Nigeria,MK:North Macedonia,NO:Norway,OM:Oman,PK:Pakistan,PW:Palau,PA:Panama,PG:Papua New Guinea,PY:Paraguay,PE:Peru,PH:Philippines,PL:Poland,PT:Portugal,QA:Qatar,RO:Romania,RU:Russia,RW:Rwanda,KN:St Kitts,LC:St Lucia,VC:St Vincent,WS:Samoa,SM:San Marino,ST:Sao Tome,SA:Saudi Arabia,SN:Senegal,RS:Serbia,SC:Seychelles,SL:Sierra Leone,SG:Singapore,SK:Slovakia,SI:Slovenia,SB:Solomon Islands,SO:Somalia,ZA:South Africa,SS:South Sudan,ES:Spain,LK:Sri Lanka,SD:Sudan,SR:Suriname,SE:Sweden,CH:Switzerland,SY:Syria,TJ:Tajikistan,TZ:Tanzania,TH:Thailand,TL:Timor-Leste,TG:Togo,TO:Tonga,TT:Trinidad,TN:Tunisia,TR:Turkey,TM:Turkmenistan,TV:Tuvalu,UG:Uganda,UA:Ukraine,AE:UAE,GB:UK,US:USA,UY:Uruguay,UZ:Uzbekistan,VU:Vanuatu,VE:Venezuela,VN:Vietnam,YE:Yemen,ZM:Zambia,ZW:Zimbabwe";
         const allCountries = rawData.split(',').map(s => { let p = s.split(':'); return { code: p[0], name: p[1] }; });
 
         function getUniqueCountryPool(desiredCount) {
@@ -110,18 +123,60 @@
             brRound: 0, maxBrRounds: 6, prevRankMap: {}, wins: {}, roundHistory: [], roundStats: [],
             lastRoundKP: {}, lastRoundPP: {}, tourneyPhase: 0, tourneyGroups: [], currentGroupIdx: 0,
             tourneyAdvancing: [], wildcards: [], midMatch: null, showMatchReport: false, grandFinalEarlyWinner: null,
-            globalStats: { kills: {}, wins: {}, placementPts: {} },
-            seasons: [], seasonSaved: false
+            globalStats: { kills: {}, wins: {}, placementPts: {}, lastRank: {} }, seasons: [], seasonSaved: false,
+            placementCounts: {}
         };
+
+        // UPDATED GLOBAL SORT: Points -> Placement Points -> Kills -> Best placement distribution (most 1st, 2nd...)
+        function globalSort(a, b) {
+            let ptsA = gameState.brScores[a.code] || 0;
+            let ptsB = gameState.brScores[b.code] || 0;
+            if (ptsB !== ptsA) return ptsB - ptsA;
+
+            // Total placement points
+            let pA = (gameState.globalStats && gameState.globalStats.placementPts) ? (gameState.globalStats.placementPts[a.code] || 0) : 0;
+            let pB = (gameState.globalStats && gameState.globalStats.placementPts) ? (gameState.globalStats.placementPts[b.code] || 0) : 0;
+            if (pB !== pA) return pB - pA;
+
+            // Total kills
+            let kA = (gameState.globalStats && gameState.globalStats.kills) ? (gameState.globalStats.kills[a.code] || 0) : 0;
+            let kB = (gameState.globalStats && gameState.globalStats.kills) ? (gameState.globalStats.kills[b.code] || 0) : 0;
+            if (kB !== kA) return kB - kA;
+
+            // Placement distribution: most 1st places, then 2nd places, etc.
+            let countsA = gameState.placementCounts[a.code] || new Array(17).fill(0);
+            let countsB = gameState.placementCounts[b.code] || new Array(17).fill(0);
+            for (let place = 1; place <= 16; place++) {
+                if (countsB[place] !== countsA[place]) return countsB[place] - countsA[place];
+            }
+
+            return a.name.localeCompare(b.name);
+        }
 
         function saveGameState() { localStorage.setItem('marbleRaceSave', JSON.stringify(gameState)); }
         function shuffleArr(a) { let b = [...a]; for (let i = b.length - 1; i > 0; i--) { let j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+
+        // ARENA BACKGROUND WITH GRID & STARS
+        function createArenaBackground(scene) {
+            let g = scene.add.graphics();
+            g.fillGradientStyle(0x0a0a1a, 0x0a0a1a, 0x14142e, 0x14142e, 1);
+            g.fillRect(0, 0, 540, 960);
+            g.lineStyle(1, 0x222244, 0.3);
+            for (let i = 0; i < 540; i += 40) { g.moveTo(i, 0); g.lineTo(i, 960); }
+            for (let j = 0; j < 960; j += 40) { g.moveTo(0, j); g.lineTo(540, j); }
+            g.strokePath();
+            g.fillStyle(0xFFFFFF, 0.2);
+            for (let s = 0; s < 80; s++) {
+                g.fillCircle(Math.random() * 540, Math.random() * 960, 1.5);
+            }
+            g.setDepth(0);
+        }
 
         function buildGrid(f = '') {
             const g = document.getElementById('picker-grid'); g.innerHTML = '';
             allCountries.filter(c => c.name.toLowerCase().includes(f.toLowerCase())).forEach(c => {
                 let d = document.createElement('div'); d.className = 'cc' + (pickerSel.has(c.code) ? ' sel' : '');
-                let img = document.createElement('img'); img.src = `https://flagcdn.com/w40/${c.code.toLowerCase()}.png`;
+                let img = document.createElement('img'); img.src = `https://flagcdn.com/w160/${c.code.toLowerCase()}.png`;
                 let nm = document.createElement('div'); nm.className = 'cn'; nm.textContent = c.name;
                 d.appendChild(img); d.appendChild(nm);
                 if (pickerSel.has(c.code)) { let b = document.createElement('div'); b.className = 'bdg'; b.textContent = [...pickerSel].indexOf(c.code) + 1; d.appendChild(b); }
@@ -141,7 +196,8 @@
             let chosen = allCountries.filter(c => pickerSel.has(c.code));
             gameState.mode = 'br'; gameState.brCountries = chosen; gameState.maxBrRounds = 6;
             gameState.brScores = {}; gameState.brPrevScores = {}; gameState.wins = {}; gameState.roundHistory = []; gameState.roundStats = []; gameState.lastRoundKP = {}; gameState.lastRoundPP = {};
-            gameState.grandFinalEarlyWinner = null;
+            gameState.grandFinalEarlyWinner = null; gameState.placementCounts = {};
+            gameState.globalStats = { kills: {}, wins: {}, placementPts: {}, lastRank: {} };
             chosen.forEach(c => { gameState.brScores[c.code] = 0; gameState.brPrevScores[c.code] = 0; gameState.wins[c.code] = 0; });
             gameState.brRound = 0; gameState.tourneyPhase = 0; gameState.midMatch = null; gameState.showMatchReport = false;
             saveGameState();
@@ -152,28 +208,11 @@
         function makeCircleTexture(scene, code) {
             if (scene.textures.exists(code + '_c')) return;
             let src = scene.textures.get(code).getSourceImage();
-            let cv = document.createElement('canvas'); cv.width = 52; cv.height = 52; let ctx = cv.getContext('2d');
-            ctx.beginPath(); ctx.arc(26, 26, 24, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
-            ctx.drawImage(src, 0, 0, 52, 52);
-            ctx.beginPath(); ctx.arc(26, 26, 23, 0, Math.PI * 2); ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.stroke();
+            let cv = document.createElement('canvas'); cv.width = 128; cv.height = 128; let ctx = cv.getContext('2d');
+            ctx.beginPath(); ctx.arc(64, 64, 62, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+            ctx.drawImage(src, 0, 0, 128, 128);
+            ctx.beginPath(); ctx.arc(64, 64, 60, 0, Math.PI * 2); ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.stroke();
             scene.textures.addImage(code + '_c', cv);
-        }
-
-        function computeRankMap(scoresObj, countries) {
-            let sorted = [...countries].sort((a, b) => {
-                let diff = (scoresObj[b.code] || 0) - (scoresObj[a.code] || 0);
-                if (diff !== 0) return diff;
-                return a.name.localeCompare(b.name);
-            });
-            let map = {}; sorted.forEach((c, i) => { map[c.code] = i + 1; }); return map;
-        }
-
-        function rankArrow(curRank, prevRank) {
-            if (!prevRank) return '';
-            let diff = prevRank - curRank;
-            if (diff > 0) return `↑${diff}`;
-            if (diff < 0) return `↓${Math.abs(diff)}`;
-            return '–';
         }
 
         function getAdvancingCount() {
@@ -183,56 +222,62 @@
             return 0;
         }
 
+        function addEsportsOverlay(scene, state = 'before') {
+            scene.add.text(530, 15, CONFIG.tiktokId, { fontFamily: 'Poppins', fontSize: '13px', fontStyle: 'bold', color: '#ffffff', alpha: 0.6 }).setOrigin(1, 0).setDepth(1000);
+            let prompt = state === 'before' ? '👇 COMMENT YOUR PREDICTION' : '❤️ LIKE  ➕ FOLLOW  🏆 FOR NEXT MATCH';
+            let col = state === 'before' ? '#FFD700' : '#00F3FF';
+            let txt = scene.add.text(270, 930, prompt, { fontFamily: 'Poppins', fontSize: '16px', fontStyle: 'bold', color: col, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(1000);
+            scene.tweens.add({ targets: txt, scale: 1.05, duration: 800, yoyo: true, repeat: -1 });
+            return txt;
+        }
+
         // ── MENU SCENE ──
         class MenuScene extends Phaser.Scene {
             constructor() { super('MenuScene'); }
-            preload() { this.load.crossOrigin = 'Anonymous'; allCountries.forEach(c => this.load.image(c.code, `https://flagcdn.com/w40/${c.code.toLowerCase()}.png`)); }
+            preload() { this.load.crossOrigin = 'Anonymous'; allCountries.forEach(c => this.load.image(c.code, `https://flagcdn.com/w160/${c.code.toLowerCase()}.png`)); }
             create() {
-                if (!gameState.seasons) gameState.seasons = [];
-                if (typeof gameState.seasonSaved === 'undefined') gameState.seasonSaved = false;
-
+                createArenaBackground(this);
+                if (!gameState.seasons) gameState.seasons = []; if (typeof gameState.seasonSaved === 'undefined') gameState.seasonSaved = false;
                 allCountries.forEach(c => makeCircleTexture(this, c.code));
-                let g = this.add.graphics(); g.fillGradientStyle(0x0d0d1a, 0x0d0d1a, 0x1a0a2e, 0x1a0a2e, 1); g.fillRect(0, 0, 540, 960);
-                let t = this.add.text(270, 75, '🎱 MARBLE RACE', { fontSize: '46px', fontStyle: 'bold', color: '#fff', stroke: '#4fc3f7', strokeThickness: 5 }).setOrigin(0.5);
 
-                this.makeBtn(270, 200, '⚡ NORMAL MODE', '60 countries • Bounce & Survive', 0xc0392b, 0xe74c3c, () => {
-                    gameState.mode = 'normal'; gameState.eliminatedNames = []; gameState.activeRoster = getUniqueCountryPool(60);
-                    saveGameState(); this.scene.start('GameScene');
+                this.add.text(270, 75, 'WORLD CUP MARBLE TOURNAMENT', { fontFamily: 'Montserrat', fontSize: '26px', fontStyle: '900', color: '#FFF', align: 'center', wordWrap: {width: 480} }).setOrigin(0.5).setDepth(1);
+                this.add.text(270, 120, 'ESPORTS BROADCAST EDITION', { fontFamily: 'Poppins', fontSize: '14px', fontStyle: 'bold', color: '#00F3FF', letterSpacing: 2 }).setOrigin(0.5).setDepth(1);
+
+                this.makeBtn(270, 210, '⚡ PRACTICE MODE', '60 countries • Bounce & Survive', 0x900C3F, 0xC70039, () => {
+                    gameState.mode = 'normal'; gameState.eliminatedNames = []; gameState.activeRoster = getUniqueCountryPool(60); saveGameState(); this.scene.start('GameScene');
                 });
-                this.makeBtn(270, 290, '🥊 CUSTOM BATTLE ROYALE', 'Pick 16 • 6 rounds • Points system', 0x7d3c98, 0x9b59b6, () => showPicker());
+                this.makeBtn(270, 300, '🥊 CUSTOM BATTLE ROYALE', 'Pick 16 • 6 rounds • Points system', 0x7000FF, 0xB026FF, () => showPicker());
 
-                let canPlayTourney = true;
-                let tourneySub = 'Play every match visually!';
-                let tourneyColor = 0x2980b9; let tourneyHover = 0x3498db;
-
+                let canPlayTourney = true; let tourneyColor = 0x0055FF; let tourneyHover = 0x00F3FF;
                 if (gameState.seasons && gameState.seasons.length > 0) {
-                    let lastSeason = gameState.seasons[gameState.seasons.length - 1];
-                    let now = new Date();
+                    let lastSeason = gameState.seasons[gameState.seasons.length - 1]; let now = new Date();
                     if (lastSeason.month === now.getMonth() && lastSeason.year === now.getFullYear()) {
-                        canPlayTourney = false;
-                        tourneySub = `🔒 Next Season unlocks next month!`;
-                        tourneyColor = 0x555555; tourneyHover = 0x777777;
+                        canPlayTourney = false; tourneyColor = 0x222330; tourneyHover = 0x3a3b4d;
                     }
                 }
 
-                this.makeBtn(270, 380, '🏆 TOURNAMENT (192)', tourneySub, tourneyColor, tourneyHover, () => {
-                    if (!canPlayTourney) {
-                        alert("Ek mahina ma ek season matra garna milchha!\nWait until next month to start a new tournament.");
-                        return;
-                    }
-                    gameState.tourneyPhase = 1; gameState.tourneyGroups = []; gameState.tourneyAdvancing = []; gameState.currentGroupIdx = 0; gameState.brRound = 0; gameState.roundStats = [];
-                    gameState.grandFinalEarlyWinner = null; gameState.seasonSaved = false;
-                    gameState.globalStats = { kills: {}, wins: {}, placementPts: {} };
+                this.makeBtn(270, 390, '🏆 48-TEAM TOURNAMENT', canPlayTourney ? '3 Groups • Starts at Semi-Finals' : '🔒 Next Season unlocks next month!', tourneyColor, tourneyHover, () => {
+                    if (!canPlayTourney) { alert("Wait until next month to start a new tournament."); return; }
+                    gameState.tourneyPhase = 2; gameState.tourneyGroups = []; gameState.tourneyAdvancing = getUniqueCountryPool(48);
+                    gameState.currentGroupIdx = 0; gameState.brRound = 0; gameState.roundStats = [];
+                    gameState.grandFinalEarlyWinner = null; gameState.seasonSaved = false; gameState.placementCounts = {};
+                    gameState.globalStats = { kills: {}, wins: {}, placementPts: {}, lastRank: {} };
                     saveGameState(); this.scene.start('TourneyScene');
-                });
+                }, !canPlayTourney);
 
-                this.makeBtn(270, 470, '📚 SEASON HISTORY', 'View past champions & top 16 ranks', 0x27ae60, 0x2ecc71, () => {
-                    this.scene.start('HistoryScene');
-                });
+                this.makeBtn(270, 480, '🌍 192-TEAM TOURNAMENT', canPlayTourney ? '12 Groups • The Ultimate Global Bracket' : '🔒 Next Season unlocks next month!', 0x0033AA, 0x0055FF, () => {
+                    if (!canPlayTourney) { alert("Wait until next month to start a new tournament."); return; }
+                    gameState.tourneyPhase = 1; gameState.tourneyGroups = []; gameState.tourneyAdvancing = []; gameState.currentGroupIdx = 0; gameState.brRound = 0; gameState.roundStats = [];
+                    gameState.grandFinalEarlyWinner = null; gameState.seasonSaved = false; gameState.placementCounts = {};
+                    gameState.globalStats = { kills: {}, wins: {}, placementPts: {}, lastRank: {} };
+                    saveGameState(); this.scene.start('TourneyScene');
+                }, !canPlayTourney);
+
+                this.makeBtn(270, 570, '📚 HALL OF FAME', 'View past champions & top 16 ranks', 0x009933, 0x00FF55, () => { this.scene.start('HistoryScene'); }, false, '#FFF', '#000');
 
                 let savedData = localStorage.getItem('marbleRaceSave');
                 if (savedData) {
-                    this.makeBtn(270, 580, '💾 RESUME SAVED GAME', 'Load your last saved match', 0xd35400, 0xe67e22, () => {
+                    this.makeBtn(270, 680, '💾 RESUME BROADCAST', 'Load your last saved match', 0xFF8800, 0xFFD700, () => {
                         try {
                             let parsed = JSON.parse(savedData); Object.assign(gameState, parsed);
                             if (gameState.midMatch && gameState.midMatch.active) this.scene.start('BRGameScene');
@@ -240,14 +285,17 @@
                             else if (gameState.mode === 'br') this.scene.start('BRRoundSelectScene');
                             else this.scene.start('GameScene');
                         } catch (e) { console.error(e); }
-                    });
+                    }, false, '#FFF', '#000');
                 }
+                addEsportsOverlay(this, 'before');
             }
-            makeBtn(x, y, title, sub, colD, colH, cb) {
-                let bg = this.add.rectangle(x, y, 360, 65, colD, 1).setInteractive();
-                this.add.text(x, y - 10, title, { fontSize: '20px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);
-                this.add.text(x, y + 12, sub, { fontSize: '11px', color: 'rgba(255,255,255,0.7)' }).setOrigin(0.5);
-                bg.on('pointerdown', cb);
+            makeBtn(x, y, title, sub, colD, colH, cb, disabled=false, tCol1='#FFF', tCol2='#FFF') {
+                let bg = this.add.rectangle(x, y, 380, 75, disabled?colD:colH, 1).setInteractive().setDepth(1);
+                if (!disabled) bg.setStrokeStyle(2, colH); else bg.setAlpha(0.7);
+                bg.isFilled = true; bg.fillColor = colD;
+                this.add.text(x, y - 12, title, { fontFamily: 'Montserrat', fontSize: '20px', fontStyle: '900', color: tCol1 }).setOrigin(0.5).setDepth(2);
+                this.add.text(x, y + 14, sub, { fontFamily: 'Poppins', fontSize: '11px', color: disabled?'#999':tCol2, fontStyle: '600' }).setOrigin(0.5).setDepth(2);
+                bg.on('pointerdown', () => { if(!disabled) cb(); });
             }
         }
 
@@ -255,29 +303,25 @@
         class HistoryScene extends Phaser.Scene {
             constructor() { super('HistoryScene'); }
             create() {
-                let g = this.add.graphics(); g.fillGradientStyle(0x0a0a18, 0x0a0a18, 0x1a2530, 0x1a2530, 1); g.fillRect(0, 0, 540, 960);
-                this.add.text(270, 50, '📚 ALL-TIME SEASONS', { fontSize: '26px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
-                
+                createArenaBackground(this);
+                this.add.text(270, 60, 'HALL OF FAME', { fontFamily: 'Montserrat', fontSize: '30px', fontStyle: '900', color: '#FFD700' }).setOrigin(0.5).setDepth(1);
                 if (!gameState.seasons || gameState.seasons.length === 0) {
-                    this.add.text(270, 400, 'Ahile samma kunai pani season sakiyeko chaina.\nKhelera jita ani yaha record aauchha!', { fontSize: '16px', color: '#aaa', align: 'center', wordWrap: {width: 400} }).setOrigin(0.5);
+                    this.add.text(270, 400, 'NO CHAMPIONS YET.\nPLAY TOURNAMENTS TO RECORD HISTORY!', { fontFamily: 'Poppins', fontSize: '16px', fontStyle: 'bold', color: '#777', align: 'center', wordWrap: {width: 400} }).setOrigin(0.5).setDepth(1);
                 } else {
-                    let startY = 130;
+                    let startY = 150;
                     gameState.seasons.forEach((season, idx) => {
-                        let y = startY + idx * 85;
-                        let bg = this.add.rectangle(270, y, 480, 75, 0x1f2438).setInteractive();
-                        bg.setStrokeStyle(1, 0x34495e);
-                        this.add.text(40, y - 16, `Season ${season.id} • ${season.name}`, { fontSize: '17px', fontStyle: 'bold', color: '#4fc3f7' }).setOrigin(0, 0.5);
-                        this.add.text(40, y + 12, `👑 Champion: ${season.champion.name}`, { fontSize: '15px', color: '#FFD700' }).setOrigin(0, 0.5);
-                        if (this.textures.exists(season.champion.code + '_c')) {
-                            this.add.image(470, y, season.champion.code + '_c').setDisplaySize(44, 44);
-                        }
+                        let y = startY + idx * 95;
+                        let bg = this.add.rectangle(270, y, 480, 80, 0x131426, 0.8).setInteractive().setStrokeStyle(1.5, 0x00F3FF).setDepth(1);
+                        this.add.text(40, y - 18, `SEASON ${season.id} • ${season.name.toUpperCase()}`, { fontFamily: 'Montserrat', fontSize: '18px', fontStyle: '900', color: '#00F3FF' }).setOrigin(0, 0.5).setDepth(2);
+                        this.add.text(40, y + 15, `👑 CHAMPION: ${season.champion.name.toUpperCase()}`, { fontFamily: 'Poppins', fontSize: '15px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0, 0.5).setDepth(2);
+                        if (this.textures.exists(season.champion.code + '_c')) { this.add.image(470, y, season.champion.code + '_c').setDisplaySize(50, 50).setDepth(2); }
                         bg.on('pointerdown', () => { this.scene.start('SeasonDetailScene', { season: season }); });
                     });
                 }
-                
-                let btn = this.add.rectangle(270, 900, 320, 50, 0xe74c3c).setInteractive();
-                this.add.text(270, 900, '🏠 BACK TO MENU', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                let btn = this.add.rectangle(270, 880, 360, 60, 0x7000FF).setInteractive().setStrokeStyle(2, 0xB026FF).setDepth(1);
+                this.add.text(270, 880, '🏠 BACK TO MAIN MENU', { fontFamily: 'Poppins', fontSize: '18px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5).setDepth(2);
                 btn.on('pointerdown', () => this.scene.start('MenuScene'));
+                addEsportsOverlay(this, 'before');
             }
         }
 
@@ -286,22 +330,20 @@
             constructor() { super('SeasonDetailScene'); }
             init(data) { this.season = data.season; }
             create() {
-                let g = this.add.graphics(); g.fillGradientStyle(0x0a0a18, 0x0a0a18, 0x1a0530, 0x1a0530, 1); g.fillRect(0, 0, 540, 960);
-                this.add.text(270, 40, `🏆 SEASON ${this.season.id} RESULTS`, { fontSize: '24px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
-                this.add.text(270, 70, `Final Top 16 Rankings of ${this.season.name}`, { fontSize: '14px', color: '#aaa' }).setOrigin(0.5);
-                
+                createArenaBackground(this);
+                this.add.text(270, 50, `🏆 SEASON ${this.season.id} RESULTS`, { fontFamily: 'Montserrat', fontSize: '24px', fontStyle: '900', color: '#FFD700' }).setOrigin(0.5).setDepth(1);
                 this.season.top16.forEach((c, i) => {
                     let y = 110 + i * 46;
-                    this.add.rectangle(270, y + 18, 460, 40, i === 0 ? 0x2c3e50 : (i % 2 === 0 ? 0x15152a : 0x111122)).setOrigin(0.5);
-                    this.add.text(40, y + 10, `${i+1}.`, { fontSize: '15px', color: i === 0 ? '#f1c40f' : '#ccc', fontStyle: 'bold' }).setOrigin(0, 0);
-                    if (this.textures.exists(c.code + '_c')) this.add.image(85, y + 18, c.code + '_c').setDisplaySize(30, 30);
-                    this.add.text(115, y + 10, c.name, { fontSize: '15px', color: i === 0 ? '#f1c40f' : '#fff', fontStyle: 'bold' }).setOrigin(0, 0);
-                    this.add.text(470, y + 10, `${c.score} pts`, { fontSize: '15px', color: '#3498db', fontStyle: 'bold' }).setOrigin(1, 0);
+                    this.add.rectangle(270, y + 18, 460, 40, i === 0 ? 0x3d2b00 : (i % 2 === 0 ? 0x131426 : 0x090a14)).setOrigin(0.5).setStrokeStyle(i===0?2:0, 0xFFD700).setDepth(1);
+                    this.add.text(40, y + 10, `${i+1}.`, { fontFamily: 'Montserrat', fontSize: '16px', color: i === 0 ? '#FFD700' : '#ccc', fontStyle: '900' }).setOrigin(0, 0).setDepth(2);
+                    if (this.textures.exists(c.code + '_c')) this.add.image(85, y + 18, c.code + '_c').setDisplaySize(30, 30).setDepth(2);
+                    this.add.text(115, y + 10, c.name.toUpperCase(), { fontFamily: 'Poppins', fontSize: '14px', color: i === 0 ? '#FFD700' : '#fff', fontStyle: 'bold' }).setOrigin(0, 0).setDepth(2);
+                    this.add.text(470, y + 10, `${c.score} PTS`, { fontFamily: 'Poppins', fontSize: '15px', color: '#00F3FF', fontStyle: 'bold' }).setOrigin(1, 0).setDepth(2);
                 });
-                
-                let btn = this.add.rectangle(270, 910, 320, 55, 0x9b59b6).setInteractive();
-                this.add.text(270, 910, '🔙 BACK TO HISTORY', { fontSize: '18px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                let btn = this.add.rectangle(270, 890, 360, 60, 0x7000FF).setInteractive().setStrokeStyle(2, 0xB026FF).setDepth(1);
+                this.add.text(270, 890, '🔙 BACK TO HISTORY', { fontFamily: 'Poppins', fontSize: '18px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5).setDepth(2);
                 btn.on('pointerdown', () => this.scene.start('HistoryScene'));
+                addEsportsOverlay(this, 'before');
             }
         }
 
@@ -309,134 +351,96 @@
         class TourneyScene extends Phaser.Scene {
             constructor() { super('TourneyScene'); }
             create() {
-                let g = this.add.graphics(); g.fillGradientStyle(0x0a0a1a, 0x0a0a1a, 0x1a2530, 0x1a2530, 1); g.fillRect(0, 0, 540, 960);
+                createArenaBackground(this);
                 if (!gameState.tourneyPhase) gameState.tourneyPhase = 1;
-
                 if (gameState.tourneyPhase === 4) {
-                    this.add.text(270, 280, '🏆 TOURNAMENT COMPLETE 🏆', { fontSize: '28px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
+                    this.add.text(270, 240, 'WORLD CHAMPION', { fontFamily: 'Montserrat', fontSize: '32px', fontStyle: '900', color: '#FFD700', textShadow: '0 0 10px #FFD700' }).setOrigin(0.5).setDepth(1);
                     let w = gameState.tourneyAdvancing[0];
-                    if (w && this.textures.exists(w.code + '_c')) this.add.image(270, 180, w.code + '_c').setDisplaySize(110, 110);
-                    
-                    if (!gameState.seasonSaved) {
-                        let now = new Date();
-                        let monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                        let seasonName = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-                        
-                        let finalSorted = [...gameState.brCountries].sort((a, b) => {
-                            let diff = (gameState.brScores[b.code] || 0) - (gameState.brScores[a.code] || 0);
-                            if (diff !== 0) return diff;
-                            return a.name.localeCompare(b.name);
-                        });
-                        
-                        if (!gameState.seasons) gameState.seasons = [];
-                        gameState.seasons.push({
-                            id: gameState.seasons.length + 1,
-                            name: seasonName,
-                            month: now.getMonth(),
-                            year: now.getFullYear(),
-                            champion: finalSorted[0],
-                            top16: finalSorted.map(c => ({ code: c.code, name: c.name, score: gameState.brScores[c.code] }))
-                        });
-                        gameState.seasonSaved = true;
-                        saveGameState();
+                    if (w && this.textures.exists(w.code + '_c')) {
+                        let particles = this.add.particles(0, 0, w.code + '_c', { x: 270, y: 360, speed: { min: 50, max: 200 }, angle: { min: 0, max: 360 }, scale: { start: 0.5, end: 0 }, lifespan: 2000, quantity: 2, blendMode: 'ADD' }).setDepth(1);
+                        this.add.image(270, 360, w.code + '_c').setDisplaySize(140, 140).setDepth(2);
+                        this.add.text(270, 460, w.name.toUpperCase(), { fontFamily: 'Poppins', fontSize: '28px', fontStyle: 'bold', color: '#FFF' }).setOrigin(0.5).setDepth(2);
                     }
-
-                    this.add.text(270, 360, 'All-time statistics & ranks have been saved!', { fontSize: '15px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5);
-
-                    let b1 = this.add.rectangle(270, 480, 260, 50, 0x34495e).setInteractive();
-                    this.add.text(270, 480, '📊 VIEW ALL-TIME STATS', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                    if (!gameState.seasonSaved) {
+                        let now = new Date(); let monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        let seasonName = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+                        let finalSorted = [...gameState.brCountries].sort(globalSort);
+                        if (!gameState.seasons) gameState.seasons = [];
+                        gameState.seasons.push({ id: gameState.seasons.length + 1, name: seasonName, month: now.getMonth(), year: now.getFullYear(), champion: finalSorted[0], top16: finalSorted.map(c => ({ code: c.code, name: c.name, score: gameState.brScores[c.code] })) });
+                        gameState.seasonSaved = true; saveGameState();
+                    }
+                    let b1 = this.add.rectangle(270, 600, 360, 60, 0x0055FF).setInteractive().setStrokeStyle(2, 0x00F3FF).setDepth(1);
+                    this.add.text(270, 600, '📊 VIEW ALL-TIME STATS', { fontFamily: 'Poppins', fontSize: '18px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5).setDepth(2);
                     b1.on('pointerdown', () => this.scene.start('TourneyStatsScene'));
-
-                    let btn = this.add.rectangle(270, 560, 260, 50, 0x27ae60).setInteractive();
-                    this.add.text(270, 560, '🏠 BACK TO MENU', { fontSize: '16px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                    let btn = this.add.rectangle(270, 680, 360, 60, 0x7000FF).setInteractive().setStrokeStyle(2, 0xB026FF).setDepth(1);
+                    this.add.text(270, 680, '🏠 BACK TO MENU', { fontFamily: 'Poppins', fontSize: '18px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5).setDepth(2);
                     btn.on('pointerdown', () => { gameState.tourneyPhase = 0; saveGameState(); this.scene.start('MenuScene'); });
-                    return;
+                    addEsportsOverlay(this, 'after'); return;
                 }
-
                 if (!gameState.tourneyGroups || gameState.tourneyGroups.length === 0) this.initPhase();
                 if ((gameState.brRound > 0 && gameState.brRound >= gameState.maxBrRounds) || (gameState.tourneyPhase === 3 && gameState.grandFinalEarlyWinner)) { this.processGroupResults(); return; }
 
-                let pText = gameState.tourneyPhase === 1 ? 'ROUND 1 (12 Groups)' : gameState.tourneyPhase === 2 ? 'ROUND 2 (3 Groups)' : 'GRAND FINAL';
-                this.add.text(270, 40, `🏆 TOURNAMENT: ${pText}`, { fontSize: '20px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
+                let pText = gameState.tourneyPhase === 1 ? 'ROUND 1 (12 GROUPS)' : gameState.tourneyPhase === 2 ? 'SEMI-FINALS (3 GROUPS)' : 'GRAND FINALS';
+                this.add.text(270, 50, `🏆 ${pText}`, { fontFamily: 'Montserrat', fontSize: '22px', fontStyle: '900', color: '#FFD700' }).setOrigin(0.5).setDepth(1);
                 let groupLetter = gameState.tourneyPhase === 3 ? 'FINAL' : String.fromCharCode(65 + gameState.currentGroupIdx);
-                this.add.text(270, 75, `UP NEXT: GROUP ${groupLetter}`, { fontSize: '18px', color: '#4fc3f7', fontStyle: 'bold' }).setOrigin(0.5);
+                this.add.text(270, 90, `UP NEXT: GROUP ${groupLetter}`, { fontFamily: 'Poppins', fontSize: '18px', color: '#00F3FF', fontStyle: 'bold', letterSpacing: 2 }).setOrigin(0.5).setDepth(1);
 
                 let currentGroup = gameState.tourneyGroups[gameState.currentGroupIdx];
                 for (let i = 0; i < currentGroup.length; i++) {
                     let col = i % 4, row = Math.floor(i / 4);
-                    let x = 85 + col * 123, y = 150 + row * 90;
-                    let c = currentGroup[i];
-                    if (this.textures.exists(c.code + '_c')) this.add.image(x, y, c.code + '_c').setDisplaySize(42, 42);
-                    this.add.text(x, y + 30, c.name.length > 10 ? c.name.substring(0, 9) + '..' : c.name, { fontSize: '11px', color: '#ccc' }).setOrigin(0.5);
+                    let x = 85 + col * 123, y = 170 + row * 100; let c = currentGroup[i];
+                    let card = this.add.rectangle(x, y+5, 100, 85, 0x131426, 0.6).setStrokeStyle(1, 0x2a2b40).setDepth(1);
+                    if (this.textures.exists(c.code + '_c')) this.add.image(x, y - 5, c.code + '_c').setDisplaySize(48, 48).setDepth(2);
+                    this.add.text(x, y + 30, c.name.length > 10 ? c.name.substring(0, 9) + '..' : c.name.toUpperCase(), { fontFamily: 'Poppins', fontSize: '11px', color: '#FFF', fontStyle: 'bold' }).setOrigin(0.5).setDepth(2);
                 }
 
-                let statsBtn = this.add.rectangle(270, 780, 320, 50, 0x2e4053).setInteractive();
-                this.add.text(270, 780, '📊 VIEW TOURNAMENT STATS (TOP 10)', { fontSize: '15px', fontStyle: 'bold', color: '#5dade2' }).setOrigin(0.5);
+                let statsBtn = this.add.rectangle(270, 750, 360, 55, 0x122240).setInteractive().setStrokeStyle(1.5, 0x0055FF).setDepth(1);
+                this.add.text(270, 750, '📊 VIEW TOURNAMENT STATS & GROUPS', { fontFamily: 'Poppins', fontSize: '15px', fontStyle: 'bold', color: '#00F3FF' }).setOrigin(0.5).setDepth(2);
                 statsBtn.on('pointerdown', () => this.scene.start('TourneyStatsScene'));
 
                 let btnTxt = gameState.brRound === 0 ? `▶ START GROUP ${groupLetter}` : `▶ PLAY MATCH ${gameState.brRound + 1}`;
-                this.actionBtn = this.add.rectangle(270, 860, 320, 60, 0x9b59b6).setInteractive();
-                this.add.text(270, 860, btnTxt, { fontSize: '18px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);
-
+                this.actionBtn = this.add.rectangle(270, 830, 360, 65, 0x00FF55).setInteractive().setStrokeStyle(2, 0x00B33C).setDepth(1);
+                this.add.text(270, 830, btnTxt, { fontFamily: 'Montserrat', fontSize: '20px', fontStyle: '900', color: '#000' }).setOrigin(0.5).setDepth(2);
                 this.actionBtn.on('pointerdown', () => {
                     if (gameState.brRound === 0) {
                         gameState.brCountries = [...currentGroup];
-                        gameState.brScores = {}; gameState.brPrevScores = {}; gameState.wins = {}; gameState.roundHistory = []; gameState.roundStats = []; gameState.showMatchReport = false;
+                        gameState.brScores = {}; gameState.brPrevScores = {}; gameState.wins = {}; gameState.roundHistory = []; gameState.roundStats = []; gameState.showMatchReport = false; gameState.placementCounts = {};
                         currentGroup.forEach(c => { gameState.brScores[c.code] = 0; gameState.brPrevScores[c.code] = 0; gameState.wins[c.code] = 0; });
                     }
                     gameState.mode = 'br'; saveGameState(); this.scene.start('BRRoundSelectScene');
                 });
+                addEsportsOverlay(this, 'before');
             }
-
             initPhase() {
                 if (gameState.tourneyPhase === 1) {
-                    gameState.maxBrRounds = 6; gameState.tourneyAdvancing = []; gameState.grandFinalEarlyWinner = null;
-                    gameState.seasonSaved = false;
+                    gameState.maxBrRounds = 6; gameState.tourneyAdvancing = []; gameState.grandFinalEarlyWinner = null; gameState.seasonSaved = false; gameState.placementCounts = {};
                     const pool = getUniqueCountryPool(192); gameState.tourneyGroups = [];
                     for (let i = 0; i < 12; i++) gameState.tourneyGroups.push(pool.slice(i * 16, (i + 1) * 16));
                     gameState.currentGroupIdx = 0;
                 } else if (gameState.tourneyPhase === 2) {
-                    gameState.maxBrRounds = 6;
-                    let shuffled = Phaser.Utils.Array.Shuffle([...gameState.tourneyAdvancing]);
-                    gameState.tourneyGroups = [];
+                    if (gameState.tourneyAdvancing.length === 0) { gameState.tourneyAdvancing = getUniqueCountryPool(48); }
+                    gameState.maxBrRounds = 6; let shuffled = Phaser.Utils.Array.Shuffle([...gameState.tourneyAdvancing]); gameState.tourneyGroups = [];
                     for (let i = 0; i < 3; i++) gameState.tourneyGroups.push(shuffled.slice(i * 16, (i + 1) * 16));
                     gameState.tourneyAdvancing = []; gameState.wildcards = []; gameState.currentGroupIdx = 0;
                 } else if (gameState.tourneyPhase === 3) {
-                    gameState.maxBrRounds = 12; gameState.grandFinalEarlyWinner = null;
-                    gameState.tourneyGroups = [gameState.tourneyAdvancing];
-                    gameState.tourneyAdvancing = []; gameState.currentGroupIdx = 0;
+                    gameState.maxBrRounds = 12; gameState.grandFinalEarlyWinner = null; gameState.placementCounts = {};
+                    gameState.tourneyGroups = [gameState.tourneyAdvancing]; gameState.tourneyAdvancing = []; gameState.currentGroupIdx = 0;
                 }
                 gameState.roundStats = []; saveGameState();
             }
-
             processGroupResults() {
-                let sorted = [...gameState.brCountries].sort((a, b) => {
-                    let diff = (gameState.brScores[b.code] || 0) - (gameState.brScores[a.code] || 0);
-                    if (diff !== 0) return diff;
-                    return a.name.localeCompare(b.name);
-                });
-
+                let sorted = [...gameState.brCountries].sort(globalSort);
                 if (gameState.tourneyPhase === 3) {
-                    if (gameState.grandFinalEarlyWinner) {
-                        let winObj = gameState.brCountries.find(c => c.code === gameState.grandFinalEarlyWinner);
-                        gameState.tourneyAdvancing = [winObj];
-                    } else {
-                        gameState.tourneyAdvancing = [sorted[0]];
-                    }
+                    if (gameState.grandFinalEarlyWinner) { let winObj = gameState.brCountries.find(c => c.code === gameState.grandFinalEarlyWinner); gameState.tourneyAdvancing = [winObj]; }
+                    else { gameState.tourneyAdvancing = [sorted[0]]; }
                     gameState.tourneyPhase = 4; saveGameState(); this.scene.restart(); return;
                 }
-                
                 if (gameState.tourneyPhase === 1) gameState.tourneyAdvancing.push(...sorted.slice(0, 4));
                 else if (gameState.tourneyPhase === 2) { gameState.tourneyAdvancing.push(...sorted.slice(0, 5)); gameState.wildcards.push(sorted[5]); }
-                
                 gameState.currentGroupIdx++; gameState.brRound = 0;
                 if (gameState.currentGroupIdx >= gameState.tourneyGroups.length) {
                     if (gameState.tourneyPhase === 2) {
-                        let bestWc = gameState.wildcards.sort((a, b) => {
-                            let diff = (gameState.brScores[b.code] || 0) - (gameState.brScores[a.code] || 0);
-                            if (diff !== 0) return diff;
-                            return a.name.localeCompare(b.name);
-                        })[0];
+                        let bestWc = gameState.wildcards.sort(globalSort)[0];
                         gameState.tourneyAdvancing.push(bestWc);
                     }
                     gameState.tourneyPhase++; gameState.tourneyGroups = [];
@@ -449,159 +453,219 @@
         class BRRoundSelectScene extends Phaser.Scene {
             constructor() { super('BRRoundSelectScene'); }
             create() {
-                let g = this.add.graphics(); g.fillGradientStyle(0x0a0a18, 0x0a0a18, 0x1a0530, 0x1a0530, 1); g.fillRect(0, 0, 540, 960);
-                if (gameState.showMatchReport) { this.renderMatchBreakdown(); } else { this.renderOverallLeaderboard(); }
+                createArenaBackground(this);
+                if (gameState.showMatchReport) { this.renderMatchBreakdown(); addEsportsOverlay(this, 'after'); }
+                else { this.renderOverallLeaderboard(); addEsportsOverlay(this, 'before'); }
             }
-
             renderMatchBreakdown() {
-                let currentMatchNum = gameState.brRound;
-                this.add.text(270, 40, `📊 MATCH ${currentMatchNum} POINTS REPORT`, { fontSize: '24px', fontStyle: 'bold', color: '#ffbe76' }).setOrigin(0.5);
-                this.add.text(270, 72, 'Points distribution for the match just completed', { fontSize: '13px', color: '#aaa' }).setOrigin(0.5);
-
-                this.add.text(40, 115, 'Country', { fontSize: '11px', color: '#888' }).setOrigin(0, 0);
-                this.add.text(230, 115, 'Match Kills', { fontSize: '11px', color: '#e67e22' }).setOrigin(0.5, 0);
-                this.add.text(340, 115, 'Placement Pts', { fontSize: '11px', color: '#2980b9' }).setOrigin(0.5, 0);
-                this.add.text(450, 115, 'Match Total', { fontSize: '11px', color: '#2ecc71' }).setOrigin(0.5, 0);
+                this.add.text(270, 50, `📊 MATCH ${gameState.brRound} REPORT`, { fontFamily: 'Montserrat', fontSize: '26px', fontStyle: '900', color: '#00F3FF' }).setOrigin(0.5).setDepth(1);
+                this.add.text(65, 115, 'TEAM', { fontFamily: 'Poppins', fontSize: '12px', fontStyle: 'bold', color: '#888' }).setOrigin(0, 0).setDepth(1);
+                this.add.text(250, 115, 'KILLS', { fontFamily: 'Poppins', fontSize: '12px', fontStyle: 'bold', color: '#FF0055' }).setOrigin(0.5, 0).setDepth(1);
+                this.add.text(350, 115, 'PLACE', { fontFamily: 'Poppins', fontSize: '12px', fontStyle: 'bold', color: '#0055FF' }).setOrigin(0.5, 0).setDepth(1);
+                this.add.text(450, 115, 'TOTAL', { fontFamily: 'Poppins', fontSize: '12px', fontStyle: 'bold', color: '#00FF55' }).setOrigin(0.5, 0).setDepth(1);
 
                 let sortedMatch = [...gameState.brCountries].sort((a, b) => {
                     let ptsA = (gameState.lastRoundKP[a.code] || 0) + (gameState.lastRoundPP[a.code] || 0);
                     let ptsB = (gameState.lastRoundKP[b.code] || 0) + (gameState.lastRoundPP[b.code] || 0);
                     if (ptsB !== ptsA) return ptsB - ptsA;
+                    let ppA = gameState.lastRoundPP[a.code] || 0; let ppB = gameState.lastRoundPP[b.code] || 0;
+                    if (ppB !== ppA) return ppB - ppA;
+                    let kpA = gameState.lastRoundKP[a.code] || 0; let kpB = gameState.lastRoundKP[b.code] || 0;
+                    if (kpB !== kpA) return kpB - kpA;
                     return a.name.localeCompare(b.name);
                 });
 
                 sortedMatch.forEach((c, idx) => {
-                    let y = 135 + idx * 46;
-                    let mKP = gameState.lastRoundKP[c.code] || 0;
-                    let mPP = gameState.lastRoundPP[c.code] || 0;
-                    let mTot = mKP + mPP;
-
-                    this.add.rectangle(270, y + 16, 470, 40, idx % 2 === 0 ? 0x211c38 : 0x171426, 0.6).setOrigin(0.5);
-                    this.add.image(55, y + 16, c.code + '_c').setDisplaySize(28, 28);
-                    this.add.text(80, y + 8, c.name.length > 12 ? c.name.substring(0, 11) + '..' : c.name, { fontSize: '13px', color: '#fff', fontStyle: 'bold' }).setOrigin(0, 0);
-                    this.add.text(230, y + 8, `+${mKP}`, { fontSize: '13px', color: '#e67e22', fontStyle: 'bold' }).setOrigin(0.5, 0);
-                    this.add.text(340, y + 8, `+${mPP}`, { fontSize: '13px', color: '#3498db', fontStyle: 'bold' }).setOrigin(0.5, 0);
-                    this.add.text(450, y + 8, `${mTot} pts`, { fontSize: '14px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5, 0);
+                    let y = 140 + idx * 46; let mKP = gameState.lastRoundKP[c.code] || 0; let mPP = gameState.lastRoundPP[c.code] || 0; let mTot = mKP + mPP;
+                    this.add.rectangle(270, y + 16, 470, 42, idx % 2 === 0 ? 0x131426 : 0x090a14, 0.8).setOrigin(0.5).setStrokeStyle(1, 0x2a2b40).setDepth(1);
+                    this.add.text(45, y + 16, `${idx+1}.`, { fontFamily: 'Montserrat', fontSize: '14px', fontStyle: '900', color: '#ccc' }).setOrigin(1, 0.5).setDepth(2);
+                    this.add.image(65, y + 16, c.code + '_c').setDisplaySize(30, 30).setDepth(2);
+                    this.add.text(90, y + 7, c.name.length > 12 ? c.name.substring(0, 11) + '..' : c.name.toUpperCase(), { fontFamily: 'Poppins', fontSize: '14px', color: '#fff', fontStyle: 'bold' }).setOrigin(0, 0).setDepth(2);
+                    this.add.text(250, y + 7, `+${mKP}`, { fontFamily: 'Poppins', fontSize: '14px', color: '#FF0055', fontStyle: 'bold' }).setOrigin(0.5, 0).setDepth(2);
+                    this.add.text(350, y + 7, `+${mPP}`, { fontFamily: 'Poppins', fontSize: '14px', color: '#00F3FF', fontStyle: 'bold' }).setOrigin(0.5, 0).setDepth(2);
+                    this.add.text(450, y + 7, `+${mTot}`, { fontFamily: 'Poppins', fontSize: '16px', color: '#00FF55', fontStyle: 'bold' }).setOrigin(0.5, 0).setDepth(2);
                 });
 
-                let nextBtn = this.add.rectangle(270, 900, 320, 55, 0x27ae60).setInteractive();
-                this.add.text(270, 900, '👀 VIEW OVERALL STANDINGS', { fontSize: '18px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);
+                let nextBtn = this.add.rectangle(270, 890, 360, 60, 0x7000FF).setInteractive().setStrokeStyle(2, 0xB026FF).setDepth(1);
+                this.add.text(270, 890, '👀 VIEW OVERALL STANDINGS', { fontFamily: 'Poppins', fontSize: '18px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5).setDepth(2);
                 nextBtn.on('pointerdown', () => { gameState.showMatchReport = false; saveGameState(); this.scene.restart(); });
             }
 
             renderOverallLeaderboard() {
                 let nextMatchNum = gameState.brRound + 1;
                 let isLastRoundFinished = gameState.brRound >= gameState.maxBrRounds || (gameState.tourneyPhase === 3 && gameState.grandFinalEarlyWinner);
+                let headerTxt = gameState.tourneyPhase > 0 ? (gameState.tourneyPhase === 3 ? '🏆 GRAND FINALS' : `🏆 GROUP ${String.fromCharCode(65 + gameState.currentGroupIdx)}`) : '🏆 BATTLE ROYALE';
+                this.add.text(270, 35, headerTxt, { fontFamily: 'Montserrat', fontSize: '26px', fontStyle: '900', color: '#FFD700' }).setOrigin(0.5).setDepth(1);
+                this.add.text(270, 65, isLastRoundFinished ? 'FINAL STANDINGS' : `OVERALL STANDINGS (BEFORE MATCH ${nextMatchNum})`, { fontFamily: 'Poppins', fontSize: '14px', color: '#FFF', fontStyle: 'bold', letterSpacing: 1 }).setOrigin(0.5).setDepth(1);
 
-                let headerTxt = gameState.tourneyPhase > 0 ? (gameState.tourneyPhase === 3 ? '🏆 GRAND FINAL' : `🏆 GROUP ${String.fromCharCode(65 + gameState.currentGroupIdx)}`) : '🏆 BATTLE ROYALE';
-                this.add.text(270, 35, headerTxt, { fontSize: '26px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
-                this.add.text(270, 70, isLastRoundFinished ? 'FINAL STANDINGS' : `OVERALL STANDINGS (Before Match ${nextMatchNum})`, { fontSize: '16px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+                this.add.text(22, 110, 'RNK', { fontFamily: 'Poppins', fontSize: '11px', fontStyle:'bold', color: '#888' }).setOrigin(0, 0).setDepth(1);
+                this.add.text(110, 110, 'TEAM', { fontFamily: 'Poppins', fontSize: '11px', fontStyle:'bold', color: '#888' }).setOrigin(0, 0).setDepth(1);
+                this.add.text(230, 110, 'KILLS', { fontFamily: 'Poppins', fontSize: '11px', fontStyle:'bold', color: '#FF0055' }).setOrigin(0.5, 0).setDepth(1);
+                this.add.text(300, 110, 'PLACE', { fontFamily: 'Poppins', fontSize: '11px', fontStyle:'bold', color: '#0055FF' }).setOrigin(0.5, 0).setDepth(1);
+                this.add.text(380, 110, 'TOTAL', { fontFamily: 'Poppins', fontSize: '11px', fontStyle:'bold', color: '#FFD700' }).setOrigin(0.5, 0).setDepth(1);
+                this.add.text(455, 110, 'WINS', { fontFamily: 'Poppins', fontSize: '11px', fontStyle:'bold', color: '#FFF' }).setOrigin(0.5, 0).setDepth(1);
 
-                this.add.text(25, 110, 'Rank', { fontSize: '10px', color: '#888' }).setOrigin(0, 0);
-                this.add.text(105, 110, 'Country', { fontSize: '10px', color: '#888' }).setOrigin(0, 0);
-                this.add.text(220, 110, 'Total Kills', { fontSize: '10px', color: '#f39c12' }).setOrigin(0.5, 0);
-                this.add.text(280, 110, 'Place Pts', { fontSize: '10px', color: '#3498db' }).setOrigin(0.5, 0);
-                this.add.text(350, 110, 'Total Points', { fontSize: '10px', color: '#FFD700' }).setOrigin(0.5, 0);
-                this.add.text(420, 110, 'Wins', { fontSize: '10px', color: '#fff' }).setOrigin(0.5, 0);
+                let totalKills = {}; let totalPlace = {}; gameState.brCountries.forEach(c => { totalKills[c.code] = 0; totalPlace[c.code] = 0; });
+                if (gameState.roundStats) { gameState.roundStats.forEach(round => { for (let code in round.kp) totalKills[code] += (round.kp[code] || 0); for (let code in round.pp) totalPlace[code] += (round.pp[code] || 0); }); }
 
-                let totalKills = {}; let totalPlace = {};
-                gameState.brCountries.forEach(c => { totalKills[c.code] = 0; totalPlace[c.code] = 0; });
-                if (gameState.roundStats) {
-                    gameState.roundStats.forEach(round => {
-                        for (let code in round.kp) totalKills[code] += (round.kp[code] || 0);
-                        for (let code in round.pp) totalPlace[code] += (round.pp[code] || 0);
-                    });
-                }
-
-                let sorted = [...gameState.brCountries].sort((a, b) => {
-                    let diff = (gameState.brScores[b.code] || 0) - (gameState.brScores[a.code] || 0);
-                    if (diff !== 0) return diff;
-                    return a.name.localeCompare(b.name);
-                });
-                
+                let sorted = [...gameState.brCountries].sort(globalSort);
                 let advLimit = getAdvancingCount();
+                let drawnAdvDivider = false; let drawnElimDivider = false;
+                let yOffset = 135;
 
                 sorted.forEach((c, i) => {
-                    let y = 125 + i * 47;
                     let isQualifying = (gameState.tourneyPhase > 0 && i < advLimit);
-                    let rowColor = isQualifying ? 0x143d24 : (i % 2 === 0 ? 0x15152a : 0x111122);
-                    let rowAlpha = isQualifying ? 0.85 : 0.5;
-
-                    let rowBg = this.add.rectangle(270, y + 18, 470, 41, rowColor, rowAlpha).setOrigin(0.5);
-                    if (isQualifying) rowBg.setStrokeStyle(1.5, 0x2ecc71, 0.7);
-
-                    let rankCol = i === 0 ? 0xFFD700 : i === 1 ? 0xC0C0C0 : i === 2 ? 0xCD7F32 : 0x444466;
-                    this.add.circle(25, y + 18, 13, rankCol);
-                    this.add.text(25, y + 18, `${i+1}`, { fontSize: '11px', fontStyle: 'bold', color: i < 3 ? '#000' : '#fff' }).setOrigin(0.5);
-
-                    let prevRank = gameState.prevRankMap[c.code] || i + 1;
-                    let arrowStr = rankArrow(i + 1, prevRank);
-                    let arrowCol = (prevRank - (i + 1) > 0) ? '#2ecc71' : (prevRank - (i + 1) < 0 ? '#e74c3c' : '#888');
-                    this.add.text(46, y + 12, arrowStr, { fontSize: '11px', fontStyle: 'bold', color: arrowCol }).setOrigin(0, 0);
-
-                    this.add.image(80, y + 18, c.code + '_c').setDisplaySize(30, 30);
-                    
-                    let displayColor = isQualifying ? '#2ecc71' : '#ffffff';
-                    let nameStr = c.name.length > 12 ? c.name.substring(0, 11) + '..' : c.name;
-                    if (gameState.tourneyPhase === 3 && gameState.brScores[c.code] >= 92 && !isLastRoundFinished) {
-                        nameStr += " (⚡MP)";
+                    if (isQualifying && !drawnAdvDivider && gameState.tourneyPhase > 0 && gameState.tourneyPhase < 3) {
+                        this.add.text(270, yOffset, '━━━━━ ADVANCING TO NEXT ROUND ━━━━━', { fontFamily: 'Poppins', fontSize: '11px', fontStyle: 'bold', color: '#00FF55' }).setOrigin(0.5).setDepth(1);
+                        yOffset += 20; drawnAdvDivider = true;
                     }
-                    this.add.text(105, y + 10, nameStr, { fontSize: '13px', color: displayColor, fontStyle: 'bold' }).setOrigin(0, 0);
+                    if (!isQualifying && !drawnElimDivider && gameState.tourneyPhase > 0 && gameState.tourneyPhase < 3) {
+                        yOffset += 5;
+                        this.add.text(270, yOffset, '━━━━━ ELIMINATED ZONE ━━━━━', { fontFamily: 'Poppins', fontSize: '11px', fontStyle: 'bold', color: '#FF0055' }).setOrigin(0.5).setDepth(1);
+                        yOffset += 25; drawnElimDivider = true;
+                    }
 
-                    this.add.text(220, y + 10, `${totalKills[c.code]}`, { fontSize: '13px', color: '#f39c12' }).setOrigin(0.5, 0);
-                    this.add.text(280, y + 10, `${totalPlace[c.code]}`, { fontSize: '13px', color: '#3498db' }).setOrigin(0.5, 0);
-                    this.add.text(350, y + 10, `${gameState.brScores[c.code]}`, { fontSize: '14px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5, 0);
-                    this.add.text(420, y + 10, `🏆×${gameState.wins[c.code] || 0}`, { fontSize: '11px', color: '#fff' }).setOrigin(0.5, 0);
+                    let rowColor = isQualifying ? 0x002e11 : (i % 2 === 0 ? 0x131426 : 0x090a14);
+                    let rowBg = this.add.rectangle(270, yOffset + 18, 480, 42, rowColor, 0.85).setOrigin(0.5).setDepth(1);
+                    if (isQualifying) rowBg.setStrokeStyle(1.5, 0x00FF55, 0.8); else rowBg.setStrokeStyle(1, 0x2a2b40);
+
+                    let rankCol = i === 0 ? 0xFFD700 : i === 1 ? 0xC0C0C0 : i === 2 ? 0xCD7F32 : 0x3d3e52;
+                    this.add.circle(20, yOffset + 18, 12, rankCol).setDepth(2);
+                    this.add.text(20, yOffset + 18, `${i+1}`, { fontFamily: 'Montserrat', fontSize: '11px', fontStyle: '900', color: i < 3 ? '#000' : '#fff' }).setOrigin(0.5).setDepth(2);
+
+                    let prevRank = gameState.prevRankMap ? gameState.prevRankMap[c.code] : (i + 1);
+                    let rankChange = (gameState.brRound === 0) ? 0 : (prevRank - (i + 1));
+                    let arrowTxt = '-'; let arrowCol = '#555';
+                    if (rankChange > 0) { arrowTxt = '▲' + rankChange; arrowCol = '#00FF55'; }
+                    else if (rankChange < 0) { arrowTxt = '▼' + Math.abs(rankChange); arrowCol = '#FF0055'; }
+                    this.add.text(45, yOffset + 18, arrowTxt, { fontFamily: 'Poppins', fontSize: '11px', color: arrowCol, fontStyle: 'bold' }).setOrigin(0.5).setDepth(2);
+
+                    let statIcon = ''; if(gameState.tourneyPhase > 0 && gameState.tourneyPhase < 3) statIcon = isQualifying ? '✅' : '❌';
+                    this.add.text(60, yOffset + 11, statIcon, { fontSize: '10px' }).setOrigin(0, 0).setDepth(2);
+                    this.add.image(85, yOffset + 18, c.code + '_c').setDisplaySize(30, 30).setDepth(2);
+
+                    let displayColor = isQualifying ? '#00FF55' : '#ffffff';
+                    let nameStr = c.name.length > 11 ? c.name.substring(0, 10) + '..' : c.name;
+                    if (gameState.tourneyPhase === 3 && gameState.brScores[c.code] >= 92 && !isLastRoundFinished) nameStr += " (⚡MP)";
+                    this.add.text(110, yOffset + 9, nameStr.toUpperCase(), { fontFamily: 'Poppins', fontSize: '14px', color: displayColor, fontStyle: 'bold' }).setOrigin(0, 0).setDepth(2);
+                    this.add.text(230, yOffset + 10, `${totalKills[c.code]}`, { fontFamily: 'Poppins', fontSize: '14px', color: '#FF0055', fontStyle:'bold' }).setOrigin(0.5, 0).setDepth(2);
+                    this.add.text(300, yOffset + 10, `${totalPlace[c.code]}`, { fontFamily: 'Poppins', fontSize: '14px', color: '#00F3FF', fontStyle:'bold' }).setOrigin(0.5, 0).setDepth(2);
+                    this.add.text(380, yOffset + 9, `${gameState.brScores[c.code]}`, { fontFamily: 'Montserrat', fontSize: '16px', fontStyle: '900', color: '#FFD700' }).setOrigin(0.5, 0).setDepth(2);
+                    this.add.text(455, yOffset + 10, `🏆×${gameState.wins[c.code] || 0}`, { fontFamily: 'Poppins', fontSize: '12px', color: '#fff', fontStyle:'bold' }).setOrigin(0.5, 0).setDepth(2);
+                    yOffset += 46;
                 });
 
-                let btn = this.add.rectangle(270, 905, 320, 55, 0x7d3c98).setInteractive();
+                let btn = this.add.rectangle(270, 890, 360, 60, isLastRoundFinished ? 0x0055FF : 0x00FF55).setInteractive().setStrokeStyle(2, isLastRoundFinished ? 0x00F3FF : 0x00B33C).setDepth(1);
                 let label = isLastRoundFinished ? '🏁 PROCEED TO FINAL STANDINGS' : `▶ START MATCH ${nextMatchNum}`;
-                this.add.text(270, 905, label, { fontSize: '18px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);
-                
-                btn.on('pointerdown', () => {
-                    if (isLastRoundFinished) this.scene.start('BRFinalScene');
-                    else { gameState.brRound++; saveGameState(); this.scene.start('BRGameScene'); }
-                });
+                this.add.text(270, 890, label, { fontFamily: 'Montserrat', fontSize: '18px', fontStyle: '900', color: isLastRoundFinished ? '#FFF' : '#000' }).setOrigin(0.5).setDepth(2);
+                btn.on('pointerdown', () => { if (isLastRoundFinished) this.scene.start('BRFinalScene'); else { gameState.brRound++; saveGameState(); this.scene.start('BRGameScene'); } });
             }
         }
 
-        // ── BATTLE ROYALE GAME SCENE ──
+        // ── BATTLE ROYALE GAME SCENE (CORE RUNTIME) ──
         class BRGameScene extends Phaser.Scene {
             constructor() { super('BRGameScene'); }
             create() {
-                this.cameras.main.setBackgroundColor('#8ab4f8');
+                this.cameras.main.setBackgroundColor('#0a0a1a');
                 this.matter.world.setGravity(0, 0);
-                this.activeBalls = []; this.floorItems = []; this.isRoundOver = false;
+                this.activeBalls = []; this.floorItems = []; this.isRoundOver = false; this.matchStarted = false;
                 this.finishOrder = []; this.dmg = {}; this.killFeedLog = []; this.activePopups = 0;
-                
-                // FULL SCREEN CIRCLE INITIALIZATION
-                this.CX = 270; this.CY = 500; this.RR = 250; 
-
-                document.getElementById('kill-feed-container').style.display = 'block';
+                this.CX = 270; this.CY = 540; this.RR = 230;
+                document.getElementById('kill-feed-container').style.display = 'none';
                 document.getElementById('kill-feed-list').innerHTML = '';
                 this.events.on('shutdown', () => { document.getElementById('kill-feed-container').style.display = 'none'; });
 
-                this.createBG();
+                this.createTopInfoBar();
+                this.createRulesPanel();
                 this.ringGfx = this.add.graphics().setDepth(10);
                 this.ringBodies = []; this.currentZoneStage = 0;
                 this.updateRingRadius(this.RR);
-                
                 this.spawnBalls();
-                this.createHUD();
                 this.createRankingPanel();
+                this.updateRankingPanel();
+                this.winnerTxt = this.add.text(this.CX, this.CY, '', { fontFamily: 'Montserrat', fontSize: '38px', fontStyle: '900', color: '#FFD700', stroke: '#000', strokeThickness: 8, align: 'center', textShadow: '0 0 15px #FFD700' }).setOrigin(0.5).setDepth(300).setAlpha(0);
+                this.tiktokBottomTxt = addEsportsOverlay(this, 'before');
+                this.matter.world.pause();
+                this.createIntroSequence();
+            }
 
+            createTopInfoBar() {
+                let topBar = this.add.rectangle(0, 0, 540, 110, 0x05050b, 0.95).setOrigin(0).setDepth(20);
+                topBar.setStrokeStyle(3, 0x00F3FF, 1);
+                let headerTxt = gameState.tourneyPhase > 0 ? (gameState.tourneyPhase === 3 ? '🏆 GRAND FINAL TOURNAMENT' : '🏆 WORLD CUP TOURNAMENT') : '🏆 CUSTOM BATTLE ROYALE';
+                this.add.text(270, 25, headerTxt, { fontFamily: 'Montserrat', fontSize: '18px', fontStyle: '900', color: '#FFD700' }).setOrigin(0.5).setDepth(21);
+                let roundTxt = gameState.tourneyPhase > 0 ? `ROUND ${gameState.tourneyPhase} | MATCH ${gameState.brRound} / ${gameState.maxBrRounds}` : `MATCH ${gameState.brRound} / ${gameState.maxBrRounds}`;
+                this.add.text(270, 55, roundTxt, { fontFamily: 'Poppins', fontSize: '15px', color: '#00F3FF', fontStyle: 'bold', letterSpacing: 2 }).setOrigin(0.5).setDepth(21);
+                this.add.text(250, 85, `PLAYERS ALIVE:`, { fontFamily: 'Poppins', fontSize: '14px', fontStyle: 'bold', color: '#FFF' }).setOrigin(1, 0.5).setDepth(21);
+                this.aliveT = this.add.text(260, 85, `16`, { fontFamily: 'Montserrat', fontSize: '18px', fontStyle: '900', color: '#00FF55' }).setOrigin(0, 0.5).setDepth(21);
+                let adv = getAdvancingCount();
+                if (adv > 0 && adv < 16) this.add.text(530, 85, `TOP ${adv} ADVANCE`, { fontFamily: 'Poppins', fontSize: '12px', fontStyle: 'bold', color: '#B026FF' }).setOrigin(1, 0.5).setDepth(21);
+            }
+
+            createRulesPanel() {
+                let ruleX = 10, ruleY = 130;
+                let pBg = this.add.rectangle(ruleX, ruleY, 115, 195, 0x090a14, 0.75).setOrigin(0, 0).setDepth(19);
+                pBg.setStrokeStyle(1.5, 0xB026FF, 0.8);
+                this.add.text(ruleX+57, ruleY+14, '📖 RULES', { fontFamily: 'Poppins', fontSize: '13px', fontStyle: 'bold', color: '#00F3FF' }).setOrigin(0.5).setDepth(20);
+                let rules = ['🔫 Kill = +1', '🥇 1st = +10', '🥈 2nd = +6', '🥉 3rd = +5', '4th = +4', '5th = +3', '6th = +2', '7-8th = +1', 'TOP TEAMS ADVANCE'];
+                rules.forEach((r, i) => {
+                    let col = i === 8 ? '#00FF55' : '#FFF'; let fs = i === 8 ? 'bold' : '600';
+                    this.add.text(ruleX+8, ruleY+34 + i*16, r, { fontFamily: 'Poppins', fontSize: i===8?'9px':'11px', color: col, fontStyle: fs }).setOrigin(0, 0).setDepth(20);
+                });
+            }
+
+            createIntroSequence() {
+                if (gameState.midMatch && gameState.midMatch.active && gameState.midMatch.round === gameState.brRound) { this.matter.world.resume(); this.matchStarted = true; this.startTimers(); return; }
+                let bg = this.add.rectangle(270, 480, 540, 960, 0x05050b, 0.95).setDepth(400);
+                let gLetter = gameState.tourneyPhase === 3 ? 'FINALS' : String.fromCharCode(65 + gameState.currentGroupIdx);
+                let gTxt = this.add.text(270, 350, `━━━━━━━━━━━━━━━\nMATCH ${gameState.brRound} OF ${gameState.maxBrRounds}\nGROUP ${gLetter}\n━━━━━━━━━━━━━━━`, { fontFamily: 'Montserrat', fontSize: '30px', fontStyle: '900', color: '#00F3FF', align: 'center' }).setOrigin(0.5).setDepth(400);
+                let advCnt = getAdvancingCount(); let advTxt = advCnt > 0 && advCnt < 16 ? `\n\nTOP ${advCnt} ADVANCE` : '';
+                let iTxt = this.add.text(270, 520, `16 TEAMS ENTER\n\n1 WINNER\n\nKILLS = 1 POINT${advTxt}`, { fontFamily: 'Poppins', fontSize: '22px', fontStyle: 'bold', color: '#FFF', align: 'center' }).setOrigin(0.5).setDepth(400);
+                let bTxt = this.add.text(270, 750, `COMMENT YOUR WINNER 👇`, { fontFamily: 'Montserrat', fontSize: '24px', fontStyle: '900', color: '#FFD700' }).setOrigin(0.5).setDepth(400);
+                this.tweens.add({ targets: [bg, gTxt, iTxt, bTxt], alpha: 0, delay: 3500, duration: 500, onComplete: () => {
+                    bg.destroy(); gTxt.destroy(); iTxt.destroy(); bTxt.destroy();
+                    this.playCountdown();
+                }});
+            }
+
+            playCountdown() {
+                let count = 3;
+                let ghostTxt = null;
+                let cdTxt = this.add.text(270, 480, count.toString(), { fontFamily: 'Montserrat', fontSize: '130px', fontStyle: '900', color: '#00FF55', stroke: '#000', strokeThickness: 12 }).setOrigin(0.5).setDepth(500);
+                this.tweens.add({ targets: cdTxt, scale: { from: 1.5, to: 1 }, alpha: { from: 1, to: 0.8 }, duration: 250 });
+                this.time.addEvent({
+                    delay: 1000,
+                    repeat: 3,
+                    callback: () => {
+                        count--;
+                        if (ghostTxt) ghostTxt.destroy();
+                        if (count > 0) {
+                            ghostTxt = this.add.text(270, 480, (count-1).toString(), { fontFamily: 'Montserrat', fontSize: '100px', fontStyle: '900', color: '#00FF55', stroke: '#000', strokeThickness: 6, alpha: 0.2 }).setOrigin(0.5).setDepth(499);
+                            cdTxt.setText(count.toString());
+                            this.tweens.add({ targets: cdTxt, scale: { from: 1.5, to: 1 }, alpha: { from: 1, to: 0.8 }, duration: 250 });
+                        } else if (count === 0) {
+                            cdTxt.setText('GO!');
+                            cdTxt.setColor('#FFD700');
+                            this.tweens.add({ targets: cdTxt, scale: { from: 1.5, to: 1 }, alpha: { from: 1, to: 0.8 }, duration: 250 });
+                            this.matter.world.resume();
+                            this.matchStarted = true;
+                            this.startTimers();
+                        } else {
+                            cdTxt.destroy();
+                        }
+                    }
+                });
+            }
+
+            startTimers() {
+                document.getElementById('kill-feed-container').style.display = 'block';
                 this.itemT = this.time.addEvent({ delay: 3000, loop: true, callback: this.spawnItems, callbackScope: this });
                 this.shootT = this.time.addEvent({ delay: 800, loop: true, callback: this.doShooting, callbackScope: this });
                 this.time.delayedCall(500, this.spawnItems, null, this);
-                this.updateRankingPanel();
             }
 
-            createBG() { let g = this.add.graphics(); g.fillStyle(0x1a1a2e, 1); g.fillRect(0, 0, 540, 110); }
-
             updateRingRadius(newRadius) {
-                this.RR = newRadius;
-                if (this.ringBodies) { this.ringBodies.forEach(b => this.matter.world.remove(b)); }
-                this.ringBodies = [];
+                this.RR = newRadius; if (this.ringBodies) { this.ringBodies.forEach(b => this.matter.world.remove(b)); } this.ringBodies = [];
                 const NS = 72;
                 for (let i = 0; i < NS; i++) {
                     let a = (i / NS) * Math.PI * 2, x = this.CX + Math.cos(a) * this.RR, y = this.CY + Math.sin(a) * this.RR;
@@ -610,145 +674,103 @@
                 }
                 this.activeBalls.forEach(ball => {
                     let dist = Phaser.Math.Distance.Between(ball.body.x, ball.body.y, this.CX, this.CY);
-                    if (dist > this.RR - 22) {
-                        let angle = Phaser.Math.Angle.Between(this.CX, this.CY, ball.body.x, ball.body.y);
-                        ball.body.setPosition(this.CX + Math.cos(angle) * (this.RR - 35), this.CY + Math.sin(angle) * (this.RR - 35));
-                        ball.body.setVelocity(-Math.cos(angle) * 3, -Math.sin(angle) * 3);
-                    }
+                    if (dist > this.RR - 22) { let angle = Phaser.Math.Angle.Between(this.CX, this.CY, ball.body.x, ball.body.y); ball.body.setPosition(this.CX + Math.cos(angle) * (this.RR - 35), this.CY + Math.sin(angle) * (this.RR - 35)); ball.body.setVelocity(-Math.cos(angle) * 3, -Math.sin(angle) * 3); }
                 });
             }
 
             spawnBalls() {
                 let spawnList = gameState.brCountries; let loadedStates = null;
                 if (gameState.midMatch && gameState.midMatch.active && gameState.midMatch.round === gameState.brRound) {
-                    this.dmg = gameState.midMatch.dmg || {}; this.finishOrder = gameState.midMatch.finishOrder || [];
-                    this.killFeedLog = gameState.midMatch.killFeedLog || []; this.killFeedLog.forEach(log => this.updateKillFeedUI());
-                    loadedStates = gameState.midMatch.players || [];
-                    spawnList = gameState.brCountries.filter(c => loadedStates.some(p => p.code === c.code));
+                    this.dmg = gameState.midMatch.dmg || {}; this.finishOrder = gameState.midMatch.finishOrder || []; this.killFeedLog = gameState.midMatch.killFeedLog || []; this.killFeedLog.forEach(log => this.updateKillFeedUI()); loadedStates = gameState.midMatch.players || []; spawnList = gameState.brCountries.filter(c => loadedStates.some(p => p.code === c.code));
                 } else { gameState.brCountries.forEach(c => this.dmg[c.code] = 0); this.finishOrder = []; }
-
                 spawnList.forEach((c, idx) => {
                     let a = (idx / 16) * Math.PI * 2; let r = Phaser.Math.Between(30, 150);
                     let pState = loadedStates ? loadedStates.find(p => p.code === c.code) : null;
-                    let sx = pState ? pState.x : (this.CX + Math.cos(a) * r);
-                    let sy = pState ? pState.y : (this.CY + Math.sin(a) * r);
-                    let vis = this.add.image(sx, sy, c.code + '_c').setDisplaySize(30, 30).setDepth(5);
-                    let body = this.matter.add.gameObject(vis, { shape: { type: 'circle', radius: 15 }, restitution: 1.1, friction: 0, density: 0.01 });
-                    let vx = pState ? pState.vx : Math.cos(Phaser.Math.Between(0, 359) * (Math.PI / 180)) * 2.5;
-                    let vy = pState ? pState.vy : Math.sin(Phaser.Math.Between(0, 359) * (Math.PI / 180)) * 2.5;
-                    body.setVelocity(vx, vy);
+                    let sx = pState ? pState.x : (this.CX + Math.cos(a) * r); let sy = pState ? pState.y : (this.CY + Math.sin(a) * r);
+                    let vis = this.add.image(sx, sy, c.code + '_c').setDisplaySize(32, 32).setDepth(5);
+                    let body = this.matter.add.gameObject(vis, { shape: { type: 'circle', radius: 16 }, restitution: 1.1, friction: 0, density: 0.01 });
+                    let vx = pState ? pState.vx : Math.cos(Phaser.Math.Between(0, 359) * (Math.PI / 180)) * 2.5; let vy = pState ? pState.vy : Math.sin(Phaser.Math.Between(0, 359) * (Math.PI / 180)) * 2.5; body.setVelocity(vx, vy);
                     this.activeBalls.push({ body, data: c, hp: pState ? pState.hp : 4, hasGun: pState ? pState.hasGun : false, ammo: pState ? pState.ammo : 0, hasShield: pState ? pState.hasShield : false, bullets: [] });
                 });
-            }
-
-            createHUD() {
-                let phaseTxt = gameState.tourneyPhase > 0 ? (gameState.tourneyPhase === 3 ? `GRAND FINAL` : `TOURNAMENT MATCH`) : 'CUSTOM MATCH';
-                this.add.text(270, 30, `${phaseTxt} | ${gameState.brRound} of ${gameState.maxBrRounds}`, { fontFamily: 'monospace', fontSize: '18px', fontStyle: 'bold', color: '#ffffff' }).setOrigin(0.5).setDepth(21);
-                this.aliveT = this.add.text(12, 70, `ALIVE: ${this.activeBalls.length}`, { fontFamily: 'monospace', fontSize: '15px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0, 0.5).setDepth(21);
-                this.winnerTxt = this.add.text(this.CX, this.CY, '', { fontSize: '24px', fontStyle: 'bold', color: '#FFD700', stroke: '#000', strokeThickness: 5, align: 'center' }).setOrigin(0.5).setDepth(40).setAlpha(0);
+                this.aliveT.setText(`${this.activeBalls.length}`);
             }
 
             createRankingPanel() {
-                let panelX = 365, panelY = 118, panelW = 170, panelH = 835;
+                let panelX = 360, panelY = 130, panelW = 170, panelH = 750;
                 let panelBg = this.add.graphics().setDepth(19);
-                
-                // REDUCED OPACITY FROM 0.88 TO 0.45 FOR TRANSPARENCY OVER FULL SCREEN CIRCLE
-                panelBg.fillStyle(0x0d0d1a, 0.45); panelBg.fillRoundedRect(panelX, panelY, panelW, panelH, 10);
-                this.add.text(panelX + panelW / 2, panelY + 16, '📊 LIVE RANKING', { fontSize: '13px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5).setDepth(20);
-
-                this.rankRows = []; let startY = panelY + 46;
+                panelBg.fillStyle(0x090a14, 0.7); panelBg.fillRoundedRect(panelX, panelY, panelW, panelH, 10);
+                panelBg.lineStyle(1.5, 0x00F3FF, 0.8); panelBg.strokeRoundedRect(panelX, panelY, panelW, panelH, 10);
+                this.add.text(panelX + panelW / 2, panelY + 16, '📊 LIVE STANDINGS', { fontFamily: 'Montserrat', fontSize: '13px', fontStyle: '900', color: '#FFD700' }).setOrigin(0.5).setDepth(20);
+                this.add.text(panelX + 115, panelY + 36, 'KILLS', { fontFamily: 'Poppins', fontSize: '9px', fontStyle:'bold', color: '#FF0055' }).setOrigin(0.5, 0.5).setDepth(20);
+                this.add.text(panelX + 145, panelY + 36, 'TOTAL', { fontFamily: 'Poppins', fontSize: '9px', fontStyle:'bold', color: '#FFD700' }).setOrigin(0.5, 0.5).setDepth(20);
+                this.rankRows = []; let startY = panelY + 48;
                 for (let i = 0; i < 16; i++) {
-                    let ry = startY + i * 45;
-                    // TRANSLUCENT ROW BACKGROUND
-                    let rowBg = this.add.rectangle(panelX + panelW / 2, ry + 22, panelW - 12, 41, 0x0d0d1a, 0.35).setOrigin(0.5).setDepth(19);
-                    let posTxt = this.add.text(panelX + 8, ry + 6, `${i+1}.`, { fontSize: '11px', color: '#888' }).setOrigin(0, 0).setDepth(20);
-                    
-                    // REMOVED ARROWS FROM LIVE RANK PANEL, SHIFTED FLAG & NAME LEFT
-                    let flagImg = this.add.image(panelX + 34, ry + 22, '').setDisplaySize(18, 18).setDepth(20);
-                    let nameTxt = this.add.text(panelX + 48, ry + 6, '', { fontSize: '10px', color: '#ccc' }).setOrigin(0, 0).setDepth(20);
-                    
-                    let kpTxt = this.add.text(panelX + 66, ry + 22, '0', { fontSize: '10px', color: '#f39c12' }).setOrigin(0.5, 0).setDepth(20);
-                    let totTxt = this.add.text(panelX + 105, ry + 22, '0', { fontSize: '11px', color: '#FFD700' }).setOrigin(0.5, 0).setDepth(20);
-                    let hpTxt = this.add.text(panelX + 145, ry + 22, '♥♥♥♥', { fontSize: '10px' }).setOrigin(0.5, 0).setDepth(20);
+                    let ry = startY + i * 43;
+                    let rowBg = this.add.rectangle(panelX + panelW / 2, ry + 18, panelW - 12, 38, 0x131426, 0.7).setOrigin(0.5).setDepth(19).setStrokeStyle(1, 0x2a2b40);
+                    let posTxt = this.add.text(panelX + 6, ry + 9, `${i+1}.`, { fontFamily: 'Montserrat', fontSize: '12px', fontStyle:'900', color: '#888' }).setOrigin(0, 0.5).setDepth(20);
+                    let flagImg = this.add.image(panelX + 26, ry + 9, '').setDisplaySize(16, 16).setDepth(20);
+                    let nameTxt = this.add.text(panelX + 41, ry + 9, '', { fontFamily: 'Poppins', fontSize: '11px', fontStyle:'bold', color: '#FFF' }).setOrigin(0, 0.5).setDepth(20);
+                    let kpTxt = this.add.text(panelX + 115, ry + 9, '0', { fontFamily: 'Poppins', fontSize: '11px', fontStyle:'bold', color: '#FF0055' }).setOrigin(0.5, 0.5).setDepth(20);
+                    let totTxt = this.add.text(panelX + 145, ry + 9, '0', { fontFamily: 'Montserrat', fontSize: '13px', fontStyle:'900', color: '#FFD700' }).setOrigin(0.5, 0.5).setDepth(20);
+                    let hpTxt = this.add.text(panelX + panelW / 2, ry + 28, '♥♥♥♥', { fontSize: '10px' }).setOrigin(0.5, 0.5).setDepth(20);
                     this.rankRows.push({ rowBg, posTxt, flagImg, nameTxt, kpTxt, totTxt, hpTxt });
                 }
             }
 
             updateRankingPanel() {
                 let advLimit = getAdvancingCount();
-
                 let sortedData = gameState.brCountries.map(c => {
-                    let ball = this.activeBalls.find(b => b.data.code === c.code);
-                    let isAlive = !!ball; let hp = isAlive ? ball.hp : 0;
-                    let basePts = gameState.brPrevScores[c.code] || 0;
-                    let currentKills = this.dmg[c.code] || 0;
-                    
+                    let ball = this.activeBalls.find(b => b.data.code === c.code); let isAlive = !!ball; let hp = isAlive ? ball.hp : 0;
+                    let basePts = gameState.brPrevScores[c.code] || 0; let currentKills = this.dmg[c.code] || 0;
                     return { code: c.code, name: c.name, isAlive, hp, score: basePts + currentKills, matchKills: currentKills };
                 });
-                
-                sortedData.sort((a, b) => {
-                    let diff = b.score - a.score;
-                    if (diff !== 0) return diff;
-                    if (b.isAlive !== a.isAlive) return b.isAlive - a.isAlive;
-                    return a.name.localeCompare(b.name);
-                });
-
+                sortedData.sort((a, b) => { let diff = b.score - a.score; if (diff !== 0) return diff; if (b.isAlive !== a.isAlive) return b.isAlive - a.isAlive; return a.name.localeCompare(b.name); });
                 sortedData.forEach((data, i) => {
                     let row = this.rankRows[i]; row.posTxt.setText(`${i+1}.`);
-                    if (this.textures.exists(data.code + '_c')) row.flagImg.setTexture(data.code + '_c');
-                    
-                    let dispName = data.name.length > 8 ? data.name.substring(0, 7) + '.' : data.name;
-                    if (gameState.tourneyPhase === 3 && gameState.brScores[data.code] >= 92) { dispName += "⭐"; }
-                    row.nameTxt.setText(dispName);
-                    
-                    row.kpTxt.setText(`${data.matchKills}`); row.totTxt.setText(`${data.score}`);
+                    if (this.textures.exists(data.code + '_c')) { row.flagImg.setTexture(data.code + '_c').setDisplaySize(16, 16); }
+                    let dispName = data.name.length > 7 ? data.name.substring(0, 6) + '..' : data.name;
+                    if (gameState.tourneyPhase === 3 && gameState.brScores[data.code] >= 92) dispName += "⭐";
+                    row.nameTxt.setText(dispName.toUpperCase()); row.kpTxt.setText(`${data.matchKills}`); row.totTxt.setText(`${data.score}`);
                     let isQualifyingZone = (gameState.tourneyPhase > 0 && i < advLimit);
-
                     if (data.isAlive) {
                         row.nameTxt.setColor('#ffffff');
-                        row.rowBg.setFillStyle(isQualifyingZone ? 0x143d24 : 0x152040, 0.4);
+                        if (i === 0) { row.rowBg.setStrokeStyle(2, 0xFFD700, 1); row.rowBg.setFillStyle(0x3d2b00, 0.8); row.posTxt.setColor('#FFD700'); }
+                        else if (isQualifyingZone) { row.rowBg.setStrokeStyle(1.5, 0x00FF55, 0.9); row.rowBg.setFillStyle(0x002e11, 0.7); row.posTxt.setColor('#FFF'); }
+                        else { row.rowBg.setStrokeStyle(1, 0x2a2b40, 0.6); row.rowBg.setFillStyle(0x131426, 0.6); row.posTxt.setColor('#888'); }
                         let hearts = ''; for(let h=0; h<4; h++) hearts += (h < data.hp ? '♥' : '♡');
-                        row.hpTxt.setText(hearts).setColor(data.hp > 2 ? '#2ecc71' : '#f39c12');
+                        row.hpTxt.setText(hearts).setColor(data.hp > 2 ? '#00FF55' : '#FF0055');
                     } else {
-                        row.nameTxt.setColor('#999999'); row.rowBg.setFillStyle(0x1a0a0a, 0.3); row.hpTxt.setText('💀').setColor('#7f8c8d');
+                        row.nameTxt.setColor('#666666'); row.rowBg.setFillStyle(0x07080f, 0.5); row.rowBg.setStrokeStyle(1, 0x1a1b26, 0.5); row.posTxt.setColor('#444');
+                        row.hpTxt.setText('💀').setColor('#666666');
                     }
                 });
             }
 
             saveMidMatch() {
                 if (this.isRoundOver) return;
-                gameState.midMatch = {
-                    active: true, round: gameState.brRound, dmg: this.dmg, finishOrder: this.finishOrder, killFeedLog: this.killFeedLog,
-                    players: this.activeBalls.map(b => ({ code: b.data.code, hp: b.hp, hasGun: b.hasGun, ammo: b.ammo, hasShield: b.hasShield, x: b.body.x, y: b.body.y, vx: b.body.body.velocity.x, vy: b.body.body.velocity.y }))
-                };
+                gameState.midMatch = { active: true, round: gameState.brRound, dmg: this.dmg, finishOrder: this.finishOrder, killFeedLog: this.killFeedLog, players: this.activeBalls.map(b => ({ code: b.data.code, hp: b.hp, hasGun: b.hasGun, ammo: b.ammo, hasShield: b.hasShield, x: b.body.x, y: b.body.y, vx: b.body.body.velocity.x, vy: b.body.body.velocity.y })) };
                 saveGameState();
             }
 
             spawnItems() {
-                if (this.isRoundOver) return;
-                
+                if (this.isRoundOver || !this.matchStarted) return;
                 let gunAngles = [];
                 for(let i = 0; i < 2; i++) {
                     let a = Phaser.Math.FloatBetween(0, Math.PI * 2);
-                    if (i === 1 && gunAngles[0]) {
-                        while (Math.abs(a - gunAngles[0]) < 0.6) { a = Phaser.Math.FloatBetween(0, Math.PI * 2); }
-                    }
-                    gunAngles.push(a);
-                    let d = Phaser.Math.FloatBetween(25, this.RR - 35);
+                    if (i === 1 && gunAngles[0]) { while (Math.abs(a - gunAngles[0]) < 0.6) { a = Phaser.Math.FloatBetween(0, Math.PI * 2); } }
+                    gunAngles.push(a); let d = Phaser.Math.FloatBetween(25, this.RR - 35);
                     let ix = this.CX + Math.cos(a) * d, iy = this.CY + Math.sin(a) * d;
-                    let lbl = this.add.text(ix, iy, '🔫', { fontSize: '16px' }).setOrigin(0.5).setDepth(4);
+                    let lbl = this.add.text(ix, iy, '🔫', { fontSize: '18px' }).setOrigin(0.5).setDepth(4);
                     this.floorItems.push({ x: ix, y: iy, type: 'gun', ammo: Phaser.Math.Between(2, 3), lbl, active: true });
                 }
-
-                let sa = Phaser.Math.FloatBetween(0, Math.PI * 2);
-                let sd = Phaser.Math.FloatBetween(25, this.RR - 35);
+                let sa = Phaser.Math.FloatBetween(0, Math.PI * 2); let sd = Phaser.Math.FloatBetween(25, this.RR - 35);
                 let sx = this.CX + Math.cos(sa) * sd, sy = this.CY + Math.sin(sa) * sd;
-                let slbl = this.add.text(sx, sy, '🛡', { fontSize: '16px' }).setOrigin(0.5).setDepth(4);
+                let slbl = this.add.text(sx, sy, '🛡', { fontSize: '18px' }).setOrigin(0.5).setDepth(4);
                 this.floorItems.push({ x: sx, y: sy, type: 'shield', ammo: 0, lbl: slbl, active: true });
             }
 
             doShooting() {
-                if (this.isRoundOver) return;
+                if (this.isRoundOver || !this.matchStarted) return;
                 this.activeBalls.forEach(ball => {
                     if (!ball.hasGun || ball.ammo <= 0) return;
                     let nearest = null, minD = 9999;
@@ -756,9 +778,9 @@
                     if (!nearest) return;
                     let dx = nearest.body.x - ball.body.x, dy = nearest.body.y - ball.body.y;
                     let len = Math.sqrt(dx * dx + dy * dy); dx /= len; dy /= len;
-                    let bg = this.add.circle(ball.body.x, ball.body.y, 2, 0xffffff).setDepth(9);
+                    let bg = this.add.circle(ball.body.x, ball.body.y, 3, 0x00F3FF).setDepth(9);
                     ball.ammo--; if (ball.ammo <= 0) ball.hasGun = false;
-                    ball.bullets.push({ gfx: bg, vx: dx * 6.5, vy: dy * 6.5, life: 60, owner: ball });
+                    ball.bullets.push({ gfx: bg, vx: dx * 7.5, vy: dy * 7.5, life: 60, owner: ball });
                 });
             }
 
@@ -775,14 +797,17 @@
                 this.floorItems = this.floorItems.filter(i => i.active);
             }
 
-            showElimPopup(countryData, rank) {
-                let container = this.add.container(-250, 900).setDepth(100);
-                let bg = this.add.rectangle(0, 0, 170, 40, 0xe74c3c, 0.9).setOrigin(0, 0.5);
-                let flag = this.add.image(20, 0, countryData.code + '_c').setDisplaySize(24, 24);
-                let txt = this.add.text(42, 0, `#${rank} ${countryData.name.substring(0,8)}`, { fontSize: '12px', fontStyle: 'bold', color: '#fff' }).setOrigin(0, 0.5);
-                container.add([bg, flag, txt]); this.activePopups++; container.y = 850 - (this.activePopups * 48);
-                this.tweens.add({ targets: container, x: 10, duration: 300, ease: 'Back.easeOut', onComplete: () => {
-                    this.time.delayedCall(2000, () => { this.tweens.add({ targets: container, x: -250, alpha: 0, duration: 300, onComplete: () => { container.destroy(); this.activePopups = Math.max(0, this.activePopups-1); } }); });
+            showElimPopup(countryData, rank, currentPoints) {
+                let container = this.add.container(270, -100).setDepth(500);
+                let bg = this.add.rectangle(0, 0, 260, 95, 0x1a050a, 0.95).setStrokeStyle(3, 0xFF0055);
+                let skull = this.add.text(0, -30, '💀 ELIMINATED', { fontFamily: 'Montserrat', fontSize: '18px', fontStyle: '900', color: '#FF0055' }).setOrigin(0.5);
+                let rankTxt = this.add.text(0, -8, `${rank}TH PLACE`, { fontFamily: 'Poppins', fontSize: '12px', fontStyle: 'bold', color: '#FFF' }).setOrigin(0.5);
+                let flag = this.add.image(-50, 20, countryData.code + '_c').setDisplaySize(24, 24);
+                let nameTxt = this.add.text(-25, 20, countryData.name.toUpperCase(), { fontFamily: 'Poppins', fontSize: '14px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0, 0.5);
+                let ptsTxt = this.add.text(0, 42, `${currentPoints} POINTS`, { fontFamily: 'Poppins', fontSize: '13px', fontStyle: 'bold', color: '#00FF55' }).setOrigin(0.5);
+                container.add([bg, skull, rankTxt, flag, nameTxt, ptsTxt]);
+                this.tweens.add({ targets: container, y: 300, duration: 400, ease: 'Back.easeOut', onComplete: () => {
+                    this.time.delayedCall(1500, () => { this.tweens.add({ targets: container, y: 1000, alpha: 0, duration: 400, ease: 'Power2', onComplete: () => container.destroy() }); });
                 }});
             }
 
@@ -793,13 +818,14 @@
                         if (b.life <= 0) { b.gfx.destroy(); ball.bullets.splice(i, 1); continue; }
                         for (let j = 0; j < this.activeBalls.length; j++) {
                             let other = this.activeBalls[j]; if (other === ball) continue;
-                            if (Phaser.Math.Distance.Between(b.gfx.x, b.gfx.y, other.body.x, other.body.y) < 17) {
+                            if (Phaser.Math.Distance.Between(b.gfx.x, b.gfx.y, other.body.x, other.body.y) < 18) {
                                 b.gfx.destroy(); ball.bullets.splice(i, 1);
-                                if (other.hasShield) { other.hasShield = false; } 
+                                if (other.hasShield) { other.hasShield = false; }
                                 else {
-                                    other.hp = Math.max(0, other.hp - 1);
-                                    this.dmg[ball.data.code] = (this.dmg[ball.data.code] || 0) + 1;
-                                    this.addToFeed(`${this.shortenName(ball.data.name)} <span class="gun-flipped">🔫</span> ${this.shortenName(other.data.name)}`);
+                                    other.hp = Math.max(0, other.hp - 1); this.dmg[ball.data.code] = (this.dmg[ball.data.code] || 0) + 1;
+                                    let ballFlag = `<img src="https://flagcdn.com/w160/${ball.data.code.toLowerCase()}.png">`;
+                                    let otherFlag = `<img src="https://flagcdn.com/w160/${other.data.code.toLowerCase()}.png">`;
+                                    this.addToFeed(`<div class="feed-item">${this.shortenName(ball.data.name)} ${ballFlag} <span class="gun-flipped">🔫</span> ${otherFlag} ${this.shortenName(other.data.name)}</div>`);
                                     this.updateRankingPanel();
                                 }
                                 break;
@@ -809,194 +835,197 @@
                 });
             }
 
-            addToFeed(htmlText) { this.killFeedLog.push(htmlText); if (this.killFeedLog.length > 5) this.killFeedLog.shift(); this.updateKillFeedUI(); }
-            updateKillFeedUI() { document.getElementById('kill-feed-list').innerHTML = this.killFeedLog.map(s => `<div class="feed-item">- ${s}</div>`).join(''); }
+            addToFeed(htmlContent) { this.killFeedLog.push(htmlContent); if (this.killFeedLog.length > 5) this.killFeedLog.shift(); this.updateKillFeedUI(); }
+            updateKillFeedUI() { document.getElementById('kill-feed-list').innerHTML = this.killFeedLog.join(''); }
             shortenName(name) { return name.length > 7 ? name.substring(0, 6) + '.' : name; }
 
             update() {
-                if (this.isRoundOver) return;
+                if (this.isRoundOver || !this.matchStarted) return;
                 this.pickupItems(); this.updateBullets();
 
                 if (this.activeBalls.length <= 12 && this.currentZoneStage === 0) {
-                    this.currentZoneStage = 1; this.updateRingRadius(190); this.cameras.main.flash(300, 231, 76, 60);
+                    this.currentZoneStage = 1; this.CX = 270; this.updateRingRadius(180); this.cameras.main.flash(300, 0, 243, 255);
                 } else if (this.activeBalls.length <= 8 && this.currentZoneStage === 1) {
-                    this.currentZoneStage = 2; this.updateRingRadius(130); this.cameras.main.flash(300, 231, 76, 60);
+                    this.currentZoneStage = 2; this.CX = 190; this.updateRingRadius(140); this.cameras.main.flash(300, 0, 243, 255);
                 } else if (this.activeBalls.length <= 4 && this.currentZoneStage === 2) {
-                    this.currentZoneStage = 3; this.updateRingRadius(80); this.cameras.main.flash(300, 231, 76, 60);
+                    this.currentZoneStage = 3; this.CX = 190; this.updateRingRadius(100); this.cameras.main.flash(300, 0, 243, 255);
                 }
 
-                this.ringGfx.clear(); this.ringGfx.lineStyle(16, 0x000000, 1); this.ringGfx.strokeCircle(this.CX, this.CY, this.RR);
-                
+                this.ringGfx.clear(); this.ringGfx.lineStyle(8, 0x00F3FF, 0.8); this.ringGfx.strokeCircle(this.CX, this.CY, this.RR);
+
                 for (let i = this.activeBalls.length - 1; i >= 0; i--) {
-                    let ball = this.activeBalls[i];
-                    let dist = Phaser.Math.Distance.Between(ball.body.x, ball.body.y, this.CX, this.CY);
+                    let ball = this.activeBalls[i]; let dist = Phaser.Math.Distance.Between(ball.body.x, ball.body.y, this.CX, this.CY);
                     if (ball.hp <= 0 || dist > this.RR + 20) {
-                        let rank = this.activeBalls.length; this.showElimPopup(ball.data, rank);
+                        let rank = this.activeBalls.length;
+                        let currentPoints = this.dmg[ball.data.code] || 0;
+                        this.showElimPopup(ball.data, rank, currentPoints);
                         ball.body.destroy(); this.finishOrder.push(ball.data.code);
-                        if (dist > this.RR + 20) this.addToFeed(`💀 Ring ${this.shortenName(ball.data.name)}`);
-                        this.activeBalls.splice(i, 1);
-                        this.aliveT.setText(`ALIVE: ${this.activeBalls.length}`);
-                        this.updateRankingPanel();
+                        if (dist > this.RR + 20) {
+                            let deadFlag = `<img src="https://flagcdn.com/w160/${ball.data.code.toLowerCase()}.png">`;
+                            this.addToFeed(`<div class="feed-item ring-death">💀 RING ${deadFlag} ${this.shortenName(ball.data.name)}</div>`);
+                        }
+                        this.activeBalls.splice(i, 1); this.aliveT.setText(`${this.activeBalls.length}`); this.updateRankingPanel();
                     } else {
-                        let vel = new Phaser.Math.Vector2(ball.body.body.velocity.x, ball.body.body.velocity.y);
-                        vel.x += Phaser.Math.FloatBetween(-0.1, 0.1); vel.y += Phaser.Math.FloatBetween(-0.1, 0.1);
-                        let spd = vel.length();
-                        if (spd < 2.2) vel.normalize().scale(2.5); else if (spd > 4.0) vel.normalize().scale(4.0);
+                        let vel = new Phaser.Math.Vector2(ball.body.body.velocity.x, ball.body.body.velocity.y); vel.x += Phaser.Math.FloatBetween(-0.1, 0.1); vel.y += Phaser.Math.FloatBetween(-0.1, 0.1);
+                        let spd = vel.length(); if (spd < 2.2) vel.normalize().scale(2.5); else if (spd > 4.0) vel.normalize().scale(4.0);
                         ball.body.setVelocity(vel.x, vel.y);
                     }
                 }
 
-                if (this.activeBalls.length <= 1) {
-                    this.isRoundOver = true;
-                    if (this.activeBalls.length === 1) this.finishOrder.push(this.activeBalls[0].data.code);
-                    this.endRound();
-                }
+                if (this.activeBalls.length <= 1) { this.isRoundOver = true; if (this.activeBalls.length === 1) this.finishOrder.push(this.activeBalls[0].data.code); this.endRound(); }
             }
 
             endRound() {
-                gameState.prevRankMap = computeRankMap(gameState.brScores, gameState.brCountries);
-                
-                let ptMap = { 1: 10, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1, 8: 1 };
-                let winnerCode = this.finishOrder[this.finishOrder.length - 1];
+                document.getElementById('kill-feed-container').style.display = 'none';
+                gameState.prevRankMap = {};
+                [...gameState.brCountries].sort(globalSort).forEach((c, i) => gameState.prevRankMap[c.code] = i + 1);
+
+                let ptMap = { 1: 10, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1, 8: 1 }; let winnerCode = this.finishOrder[this.finishOrder.length - 1];
                 gameState.wins[winnerCode] = (gameState.wins[winnerCode] || 0) + 1;
+                if (gameState.tourneyPhase === 3 && gameState.brPrevScores[winnerCode] >= 92) { gameState.grandFinalEarlyWinner = winnerCode; }
 
-                if (gameState.tourneyPhase === 3 && gameState.brPrevScores[winnerCode] >= 92) {
-                    gameState.grandFinalEarlyWinner = winnerCode;
-                }
+                if (!gameState.globalStats) gameState.globalStats = { kills: {}, wins: {}, placementPts: {}, lastRank: {} };
+                if (!gameState.globalStats.lastRank) gameState.globalStats.lastRank = {};
 
-                if (!gameState.globalStats) gameState.globalStats = { kills: {}, wins: {}, placementPts: {} };
-                gameState.lastRoundKP = {}; gameState.lastRoundPP = {};
-                let roundKP = {}; let roundPP = {};
+                gameState.lastRoundKP = {}; gameState.lastRoundPP = {}; let roundKP = {}; let roundPP = {};
+
+                // Update placement distribution
+                if (!gameState.placementCounts) gameState.placementCounts = {};
 
                 this.finishOrder.forEach((code, idx) => {
-                    let placement = gameState.brCountries.length - idx; 
-                    let pp = ptMap[placement] || 0; let kp = this.dmg[code] || 0;
-                    
-                    gameState.brScores[code] = (gameState.brScores[code] || 0) + kp + pp;
-                    gameState.brPrevScores[code] = gameState.brScores[code];
-                    gameState.lastRoundKP[code] = kp; gameState.lastRoundPP[code] = pp;
-                    roundKP[code] = kp; roundPP[code] = pp;
+                    let placement = this.finishOrder.length - idx; // 1st to 16th
+                    gameState.globalStats.lastRank[code] = placement;
 
-                    gameState.globalStats.kills[code] = (gameState.globalStats.kills[code] || 0) + kp;
-                    gameState.globalStats.placementPts[code] = (gameState.globalStats.placementPts[code] || 0) + pp;
+                    let pp = ptMap[placement] || 0; let kp = this.dmg[code] || 0;
+                    gameState.brScores[code] = (gameState.brScores[code] || 0) + kp + pp; gameState.brPrevScores[code] = gameState.brScores[code];
+                    gameState.lastRoundKP[code] = kp; gameState.lastRoundPP[code] = pp; roundKP[code] = kp; roundPP[code] = pp;
+                    gameState.globalStats.kills[code] = (gameState.globalStats.kills[code] || 0) + kp; gameState.globalStats.placementPts[code] = (gameState.globalStats.placementPts[code] || 0) + pp;
+
+                    // Track placement counts
+                    if (!gameState.placementCounts[code]) gameState.placementCounts[code] = new Array(17).fill(0);
+                    gameState.placementCounts[code][placement]++;
                 });
+
                 gameState.globalStats.wins[winnerCode] = (gameState.globalStats.wins[winnerCode] || 0) + 1;
-                
-                gameState.roundStats.push({ kp: roundKP, pp: roundPP });
-                gameState.midMatch = null; gameState.showMatchReport = true;
-                saveGameState();
+                gameState.roundStats.push({ kp: roundKP, pp: roundPP }); gameState.midMatch = null; gameState.showMatchReport = true; saveGameState();
 
                 let winnerObj = gameState.brCountries.find(c => c.code === winnerCode);
-                this.winnerTxt.setText(`🏆 MATCH WINNER\n${winnerObj ? winnerObj.name : '???'}`).setAlpha(1);
-                
+                this.cameras.main.flash(800, 255, 215, 0);
+                this.winnerTxt.setText(`🏆 MATCH WINNER\n${winnerObj ? winnerObj.name.toUpperCase() : '???'}\n+10 POINTS`).setScale(0.5);
+                this.tweens.add({ targets: this.winnerTxt, alpha: 1, scale: 1.1, duration: 800, ease: 'Elastic.easeOut' });
+                this.add.particles(0, 0, winnerCode+'_c', { x: 270, y: 540, speed: { min: 200, max: 600 }, angle: { min: 0, max: 360 }, scale: { start: 1, end: 0 }, lifespan: 2000, quantity: 25, blendMode: 'ADD' }).setDepth(299);
+                if (this.tiktokBottomTxt) { this.tiktokBottomTxt.setText("❤️ LIKE   ➕ FOLLOW   🏆 FOR NEXT MATCH").setColor("#00F3FF"); }
                 if (this.itemT) this.itemT.remove(); if (this.shootT) this.shootT.remove();
-                this.time.delayedCall(2500, () => this.scene.start('BRRoundSelectScene'));
+                this.time.delayedCall(4500, () => this.scene.start('BRRoundSelectScene'));
             }
         }
 
-        // ── TOURNAMENT STATS DASHBOARD ──
+        // ── TOURNAMENT STATS SCENE (unchanged but with background) ──
         class TourneyStatsScene extends Phaser.Scene {
-            constructor() { super('TourneyStatsScene'); this.currentTab = 'kills'; }
+            constructor() { super('TourneyStatsScene'); this.currentTab = 'kills'; this.viewGroupIdx = 0; }
             create() {
-                let g = this.add.graphics(); g.fillGradientStyle(0x0a0a18, 0x0a0a18, 0x111e38, 0x111e38, 1); g.fillRect(0, 0, 540, 960);
-                this.add.text(270, 40, '📊 ALL-TIME TOURNAMENT LEADERBOARD', { fontSize: '22px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
-                this.add.text(270, 70, 'Overall records tracked across all matches played', { fontSize: '13px', color: '#888' }).setOrigin(0.5);
-
-                this.createTabBtn(95, 120, '⚔️ KILLS', 'kills');
-                this.createTabBtn(270, 120, '🏆 WINS', 'wins');
-                this.createTabBtn(445, 120, '🎯 PLACEMENTS', 'placements');
-
+                createArenaBackground(this);
+                this.add.text(270, 45, '📊 TOURNAMENT MASTER HUB', { fontFamily: 'Montserrat', fontSize: '22px', fontStyle: '900', color: '#FFD700' }).setOrigin(0.5).setDepth(1);
+                this.createTabBtn(68, 110, '⚔️ KILLS', 'kills', 115); this.createTabBtn(198, 110, '🏆 WINS', 'wins', 115); this.createTabBtn(328, 110, '🎯 PLACE', 'placements', 115); this.createTabBtn(465, 110, '📋 GROUPS', 'groups', 130);
                 this.renderStatsList();
-
-                let backBtn = this.add.rectangle(270, 900, 320, 50, 0xe74c3c).setInteractive();
-                this.add.text(270, 900, '🏠 RETURN TO TOURNAMENT', { fontSize: '16px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);
+                let backBtn = this.add.rectangle(270, 890, 360, 60, 0x7000FF).setInteractive().setStrokeStyle(2, 0xB026FF).setDepth(1);
+                this.add.text(270, 890, '🏠 RETURN TO TOURNAMENT', { fontFamily: 'Poppins', fontSize: '16px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5).setDepth(2);
                 backBtn.on('pointerdown', () => this.scene.start('TourneyScene'));
+                addEsportsOverlay(this, 'before');
             }
-            createTabBtn(x, y, label, tabKey) {
+            createTabBtn(x, y, label, tabKey, w = 150) {
                 let isActive = this.currentTab === tabKey;
-                let btn = this.add.rectangle(x, y, 150, 36, isActive ? 0x2e86de : 0x22223bb, 0.8).setInteractive();
-                btn.setStrokeStyle(1.5, isActive ? 0x54a0ff : 0x444455);
-                this.add.text(x, y, label, { fontSize: '12px', fontStyle: 'bold', color: isActive ? '#fff' : '#aaa' }).setOrigin(0.5);
+                let btn = this.add.rectangle(x, y, w, 40, isActive ? 0x0055FF : 0x131426, 0.8).setInteractive().setStrokeStyle(2, isActive ? 0x00F3FF : 0x2a2b40).setDepth(1);
+                this.add.text(x, y, label, { fontFamily: 'Poppins', fontSize: '13px', fontStyle: 'bold', color: isActive ? '#fff' : '#aaa' }).setOrigin(0.5).setDepth(2);
                 btn.on('pointerdown', () => { this.currentTab = tabKey; this.scene.restart(); });
             }
             renderStatsList() {
-                if (!gameState.globalStats) gameState.globalStats = { kills: {}, wins: {}, placementPts: {} };
-                let sourceData = []; let statLabel = ''; let statColor = '#fff';
-
-                if (this.currentTab === 'kills') {
-                    sourceData = Object.keys(gameState.globalStats.kills).map(code => ({ code, val: gameState.globalStats.kills[code] }));
-                    statLabel = 'Total Confirmed Kills'; statColor = '#e67e22';
-                } else if (this.currentTab === 'wins') {
-                    sourceData = Object.keys(gameState.globalStats.wins).map(code => ({ code, val: gameState.globalStats.wins[code] }));
-                    statLabel = 'Matches Won (1st Place)'; statColor = '#f1c40f';
-                } else {
-                    sourceData = Object.keys(gameState.globalStats.placementPts).map(code => ({ code, val: gameState.globalStats.placementPts[code] }));
-                    statLabel = 'Total Accumulated Placement Pts'; statColor = '#3498db';
-                }
-
+                if (this.currentTab === 'groups') { this.renderGroupsTab(); return; }
+                if (!gameState.globalStats) gameState.globalStats = { kills: {}, wins: {}, placementPts: {}, lastRank: {} };
+                let sourceData = []; let statColor = '#fff';
+                if (this.currentTab === 'kills') { sourceData = Object.keys(gameState.globalStats.kills).map(code => ({ code, val: gameState.globalStats.kills[code] })); statColor = '#FF0055'; }
+                else if (this.currentTab === 'wins') { sourceData = Object.keys(gameState.globalStats.wins).map(code => ({ code, val: gameState.globalStats.wins[code] })); statColor = '#FFD700'; }
+                else { sourceData = Object.keys(gameState.globalStats.placementPts).map(code => ({ code, val: gameState.globalStats.placementPts[code] })); statColor = '#00F3FF'; }
                 sourceData.sort((a, b) => b.val - a.val); let top10 = sourceData.slice(0, 10);
-                this.add.text(270, 175, `✨ TOP 10 BEST TEAMS (${statLabel.toUpperCase()})`, { fontSize: '13px', fontStyle: 'bold', color: '#2ecc71' }).setOrigin(0.5);
-
-                if (top10.length === 0) {
-                    this.add.text(270, 450, 'No statistics recorded yet.\nComplete matches to populate data!', { fontSize: '15px', color: '#666', align: 'center' }).setOrigin(0.5); return;
-                }
+                if (top10.length === 0) { this.add.text(270, 450, 'NO STATISTICS RECORDED YET.', { fontFamily: 'Poppins', fontSize: '16px', fontStyle: 'bold', color: '#666', align: 'center' }).setOrigin(0.5).setDepth(1); return; }
                 top10.forEach((item, idx) => {
-                    let y = 205 + idx * 56; let matchCountry = allCountries.find(c => c.code === item.code) || { name: item.code };
-                    this.add.rectangle(270, y + 22, 460, 48, idx < 3 ? 0x1f2438 : 0x131726, 0.7).setOrigin(0.5).setStrokeStyle(1, idx === 0 ? 0xf1c40f : 0x333);
+                    let y = 160 + idx * 60; let matchCountry = allCountries.find(c => c.code === item.code) || { name: item.code };
+                    this.add.rectangle(270, y + 25, 480, 52, idx < 3 ? 0x181a36 : 0x090a14, 0.8).setOrigin(0.5).setStrokeStyle(1.5, idx === 0 ? 0xFFD700 : 0x2a2b40).setDepth(1);
                     let rankIcon = idx === 0 ? '👑 1.' : idx === 1 ? '🥈 2.' : idx === 2 ? '🥉 3.' : `   ${idx+1}.`;
-                    this.add.text(35, y + 13, rankIcon, { fontSize: '14px', fontStyle: 'bold', color: idx === 0 ? '#f1c40f' : '#ccc' }).setOrigin(0, 0);
-                    if (this.textures.exists(item.code + '_c')) this.add.image(95, y + 22, item.code + '_c').setDisplaySize(32, 32);
-                    this.add.text(125, y + 14, matchCountry.name, { fontSize: '14px', fontStyle: 'bold', color: '#fff' }).setOrigin(0, 0);
-                    this.add.text(465, y + 12, `${item.val}`, { fontSize: '18px', fontStyle: 'bold', color: statColor }).setOrigin(1, 0);
+                    this.add.text(30, y + 15, rankIcon, { fontFamily: 'Montserrat', fontSize: '16px', fontStyle: '900', color: idx === 0 ? '#FFD700' : '#ccc' }).setOrigin(0, 0).setDepth(2);
+                    if (this.textures.exists(item.code + '_c')) this.add.image(95, y + 25, item.code + '_c').setDisplaySize(36, 36).setDepth(2);
+                    this.add.text(125, y + 15, matchCountry.name.toUpperCase(), { fontFamily: 'Poppins', fontSize: '16px', fontStyle: 'bold', color: '#fff' }).setOrigin(0, 0).setDepth(2);
+                    this.add.text(480, y + 12, `${item.val}`, { fontFamily: 'Montserrat', fontSize: '20px', fontStyle: '900', color: statColor }).setOrigin(1, 0).setDepth(2);
                 });
+            }
+            renderGroupsTab() {
+                if (!gameState.tourneyGroups || gameState.tourneyGroups.length === 0) {
+                    this.add.text(270, 450, 'NO TOURNAMENT GROUPS GENERATED YET.\nSTART A TOURNAMENT FIRST!', { fontFamily: 'Poppins', fontSize: '15px', fontStyle: 'bold', color: '#666', align: 'center' }).setOrigin(0.5).setDepth(1);
+                    return;
+                }
+                let totalGroups = gameState.tourneyGroups.length;
+                if (this.viewGroupIdx >= totalGroups) this.viewGroupIdx = 0;
+                let gLetter = gameState.tourneyPhase === 3 ? 'FINAL' : String.fromCharCode(65 + this.viewGroupIdx);
+                this.add.text(270, 175, `TOURNAMENT PHASE ${gameState.tourneyPhase} - GROUP ${gLetter}`, { fontFamily: 'Montserrat', fontSize: '16px', fontStyle: '900', color: '#00F3FF' }).setOrigin(0.5).setDepth(1);
+                if (totalGroups > 1) {
+                    let prevBtn = this.add.rectangle(80, 175, 40, 35, 0x131426).setInteractive().setStrokeStyle(1.5, 0x00F3FF).setDepth(1);
+                    this.add.text(80, 175, '◀', { fontStyle: 'bold', color: '#fff' }).setOrigin(0.5).setDepth(2);
+                    prevBtn.on('pointerdown', () => { this.viewGroupIdx = (this.viewGroupIdx - 1 + totalGroups) % totalGroups; this.scene.restart(); });
+                    let nextBtn = this.add.rectangle(460, 175, 40, 35, 0x131426).setInteractive().setStrokeStyle(1.5, 0x00F3FF).setDepth(1);
+                    this.add.text(460, 175, '▶', { fontStyle: 'bold', color: '#fff' }).setOrigin(0.5).setDepth(2);
+                    nextBtn.on('pointerdown', () => { this.viewGroupIdx = (this.viewGroupIdx + 1) % totalGroups; this.scene.restart(); });
+                }
+                let currentGroup = gameState.tourneyGroups[this.viewGroupIdx];
+                if (currentGroup) {
+                    currentGroup.forEach((c, idx) => {
+                        let col = idx % 2, row = Math.floor(idx / 2), x = 145 + col * 250, y = 240 + row * 62;
+                        let isCurrentPlayingGroup = (gameState.currentGroupIdx === this.viewGroupIdx && gameState.tourneyPhase !== 3);
+                        let cardBg = this.add.rectangle(x, y, 230, 50, isCurrentPlayingGroup ? 0x052244 : 0x131426, 0.8).setStrokeStyle(1.5, isCurrentPlayingGroup ? 0x00FF55 : 0x2a2b40).setDepth(1);
+                        if (this.textures.exists(c.code + '_c')) { this.add.image(x - 90, y, c.code + '_c').setDisplaySize(32, 32).setDepth(2); }
+                        this.add.text(x - 60, y, c.name.toUpperCase().substring(0, 14), { fontFamily: 'Poppins', fontSize: '12px', fontStyle: 'bold', color: '#fff' }).setOrigin(0, 0.5).setDepth(2);
+                        let score = gameState.brScores[c.code] !== undefined ? gameState.brScores[c.code] : 0;
+                        this.add.text(x + 100, y, `${score}P`, { fontFamily: 'Montserrat', fontSize: '13px', fontStyle: '900', color: '#FFD700' }).setOrigin(1, 0.5).setDepth(2);
+                    });
+                }
             }
         }
 
-        // ── BATTLE ROYALE FINAL RESULTS SCENE ──
+        // ── BR FINAL SCENE ──
         class BRFinalScene extends Phaser.Scene {
             constructor() { super('BRFinalScene'); }
             create() {
-                let titleTxt = gameState.tourneyPhase > 0 ? `🏆 GRAND FINAL RESULTS 🏆` : '🏆 BATTLE ROYALE';
-                let g = this.add.graphics(); g.fillGradientStyle(0x0a0a18, 0x0a0a18, 0x1a0530, 0x0a1a10, 1); g.fillRect(0, 0, 540, 960);
-                this.add.text(270, 38, titleTxt, { fontSize: '24px', fontStyle: 'bold', color: '#FFD700' }).setOrigin(0.5);
-
-                let sorted = [...gameState.brCountries].sort((a, b) => {
-                    let diff = (gameState.brScores[b.code] || 0) - (gameState.brScores[a.code] || 0);
-                    if (diff !== 0) return diff;
-                    return a.name.localeCompare(b.name);
-                });
-                
+                createArenaBackground(this);
+                let sorted = [...gameState.brCountries].sort(globalSort);
                 if (gameState.tourneyPhase === 3 && gameState.grandFinalEarlyWinner) {
                     let championIdx = sorted.findIndex(c => c.code === gameState.grandFinalEarlyWinner);
-                    if (championIdx !== -1) {
-                        let championObj = sorted.splice(championIdx, 1)[0];
-                        sorted.unshift(championObj);
-                    }
+                    if (championIdx !== -1) { let championObj = sorted.splice(championIdx, 1)[0]; sorted.unshift(championObj); }
                 }
-
+                if (gameState.tourneyPhase === 3) {
+                    this.add.particles(0, 0, sorted[0].code+'_c', { x: 270, y: 140, speed: { min: 20, max: 100 }, scale: { start: 0.3, end: 0 }, lifespan: 3000, quantity: 1, blendMode: 'ADD' }).setDepth(1);
+                    this.add.text(270, 40, '━━━━━━━━━━━━━━━\nWORLD CHAMPION\n━━━━━━━━━━━━━━━', { fontFamily: 'Montserrat', fontSize: '24px', fontStyle: '900', color: '#FFD700', align: 'center', textShadow: '0 0 10px #FFD700' }).setOrigin(0.5).setDepth(1);
+                    this.add.image(270, 130, sorted[0].code + '_c').setDisplaySize(64, 64).setDepth(2);
+                } else {
+                    this.add.text(270, 45, '🏆 BATTLE ROYALE', { fontFamily: 'Montserrat', fontSize: '24px', fontStyle: '900', color: '#FFD700' }).setOrigin(0.5).setDepth(1);
+                }
                 let advLimit = getAdvancingCount();
-
+                let startY = gameState.tourneyPhase === 3 ? 190 : 100;
                 sorted.forEach((c, i) => {
-                    let y = 100 + i * 46;
+                    let y = startY + i * 44;
                     let isQualifying = (gameState.tourneyPhase === 3 && i === 0) || (gameState.tourneyPhase < 3 && gameState.tourneyPhase > 0 && i < advLimit);
-                    let bgCol = isQualifying ? 0x143d24 : (i % 2 === 0 ? 0x111122 : 0x0d0d1a);
-
-                    this.add.rectangle(270, y + 18, 460, 40, bgCol).setOrigin(0.5);
-                    this.add.text(32, y + 10, `${i+1}.`, { fontSize: '13px', color: isQualifying ? '#2ecc71' : '#666' }).setOrigin(0, 0);
-                    if (this.textures.exists(c.code + '_c')) this.add.image(58, y + 18, c.code + '_c').setDisplaySize(26, 26);
-                    
+                    let bgCol = isQualifying ? 0x002e11 : (i % 2 === 0 ? 0x131426 : 0x090a14);
+                    let row = this.add.rectangle(270, y + 18, 480, 38, bgCol).setOrigin(0.5).setDepth(1);
+                    if(isQualifying) row.setStrokeStyle(1.5, 0x00FF55, 0.8);
+                    this.add.text(32, y + 9, `${i+1}.`, { fontFamily: 'Montserrat', fontSize: '14px', fontStyle: '900', color: isQualifying ? '#00FF55' : '#55566b' }).setOrigin(0, 0).setDepth(2);
+                    if (this.textures.exists(c.code + '_c')) this.add.image(65, y + 18, c.code + '_c').setDisplaySize(26, 26).setDepth(2);
                     let suffix = (gameState.tourneyPhase === 3 && i === 0) ? " 🏆 CHAMPION" : "";
-                    this.add.text(78, y + 8, c.name + suffix, { fontSize: '13px', color: isQualifying ? '#2ecc71' : '#aaa', fontStyle: isQualifying ? 'bold' : 'normal' }).setOrigin(0, 0);
-                    this.add.text(420, y + 8, `${gameState.brScores[c.code]} pts`, { fontSize: '13px', color: '#FFD700', fontStyle: 'bold' }).setOrigin(0, 0);
+                    this.add.text(90, y + 9, c.name.toUpperCase() + suffix, { fontFamily: 'Poppins', fontSize: '14px', color: isQualifying ? '#00FF55' : '#aaa', fontStyle: isQualifying ? 'bold' : 'normal' }).setOrigin(0, 0).setDepth(2);
+                    this.add.text(490, y + 9, `${gameState.brScores[c.code]} PTS`, { fontFamily: 'Montserrat', fontSize: '14px', color: '#FFD700', fontStyle: '900' }).setOrigin(1, 0).setDepth(2);
                 });
-
                 let btnTxt = gameState.tourneyPhase > 0 ? '▶ CONTINUE BRACKET' : '🏠 BACK TO MENU';
-                let btn = this.add.rectangle(270, 915, 320, 54, 0x7d3c98).setInteractive();
-                this.add.text(270, 915, btnTxt, { fontSize: '18px', fontStyle: 'bold', color: '#fff' }).setOrigin(0.5);
-                btn.on('pointerdown', () => {
-                    if (gameState.tourneyPhase > 0) this.scene.start('TourneyScene');
-                    else { gameState.tourneyPhase = 0; saveGameState(); this.scene.start('MenuScene'); }
-                });
+                let btn = this.add.rectangle(270, 890, 360, 60, 0x7000FF).setInteractive().setStrokeStyle(2, 0xB026FF).setDepth(1);
+                this.add.text(270, 890, btnTxt, { fontFamily: 'Montserrat', fontSize: '18px', fontStyle: '900', color: '#fff' }).setOrigin(0.5).setDepth(2);
+                btn.on('pointerdown', () => { if (gameState.tourneyPhase > 0) this.scene.start('TourneyScene'); else { gameState.tourneyPhase = 0; saveGameState(); this.scene.start('MenuScene'); } });
+                addEsportsOverlay(this, 'after');
             }
         }
 
@@ -1004,16 +1033,17 @@
         class GameScene extends Phaser.Scene {
             constructor() { super('GameScene'); }
             create() {
-                this.cameras.main.setBackgroundColor('#7aabf5'); this.matter.world.setGravity(0, 0); this.activeBalls = []; this.isGameOver = false; this.activePopups = 0;
-                this.add.rectangle(0, 0, 540, 88, 0x000000, 0.88).setOrigin(0).setDepth(20);
-                this.aliveText = this.add.text(270, 60, `ALIVE: ${gameState.activeRoster.length}`, { fontSize: '18px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5).setDepth(20);
-                this.elimBox = this.add.text(8, 96, 'ELIMINATED:\n', { fontSize: '14px', color: '#fff', wordWrap: { width: 180 } }).setOrigin(0, 0).setDepth(20);
-                this.winnerTxt = this.add.text(270, 480, '', { fontSize: '38px', color: '#FFD700', fontStyle: 'bold', stroke: '#000', strokeThickness: 8 }).setOrigin(0.5).setDepth(30);
-                this.CX = 270; this.CY = 515; this.RR = 230;
+                this.cameras.main.setBackgroundColor('#0a0a1a'); this.matter.world.setGravity(0, 0); this.activeBalls = []; this.isGameOver = false;
+                let topBar = this.add.rectangle(0, 0, 540, 110, 0x131426, 0.95).setOrigin(0).setDepth(20).setStrokeStyle(2, 0x00F3FF);
+                this.aliveText = this.add.text(270, 40, `ALIVE: ${gameState.activeRoster.length}`, { fontFamily: 'Montserrat', fontSize: '24px', color: '#00FF55', fontStyle: '900' }).setOrigin(0.5).setDepth(20);
+                this.elimBox = this.add.text(15, 125, 'ELIMINATED:\n', { fontFamily: 'Poppins', fontSize: '12px', fontStyle: 'bold', color: '#FF0055', wordWrap: { width: 180 } }).setOrigin(0, 0).setDepth(20);
+                this.winnerTxt = this.add.text(270, 500, '', { fontFamily: 'Montserrat', fontSize: '42px', color: '#FFD700', fontStyle: '900', stroke: '#000', strokeThickness: 10, textShadow: '0 0 15px #FFD700', align: 'center' }).setOrigin(0.5).setDepth(30);
+                this.CX = 270; this.CY = 540; this.RR = 230;
                 this.createRing(); this.spawnBalls();
+                addEsportsOverlay(this, 'before');
             }
             createRing() {
-                this.ringGfx = this.add.graphics().setDepth(10); this.ringGfx.lineStyle(14, 0x000000, 1); this.ringGfx.strokeCircle(this.CX, this.CY, this.RR);
+                this.ringGfx = this.add.graphics().setDepth(10); this.ringGfx.lineStyle(8, 0x00F3FF, 0.8); this.ringGfx.strokeCircle(this.CX, this.CY, this.RR);
                 const NS = 72;
                 for (let i = 0; i < NS; i++) {
                     let a = (i / NS) * Math.PI * 2, x = this.CX + Math.cos(a) * this.RR, y = this.CY + Math.sin(a) * this.RR;
@@ -1023,8 +1053,8 @@
             spawnBalls() {
                 gameState.activeRoster.forEach(c => {
                     let sx = this.CX + Phaser.Math.Between(-120, 120), sy = this.CY + Phaser.Math.Between(-120, 120);
-                    let vis = this.add.image(sx, sy, c.code + '_c').setDisplaySize(28, 28).setDepth(5);
-                    let body = this.matter.add.gameObject(vis, { shape: { type: 'circle', radius: 14 }, restitution: 1.1, friction: 0, density: 0.01 });
+                    let vis = this.add.image(sx, sy, c.code + '_c').setDisplaySize(30, 30).setDepth(5);
+                    let body = this.matter.add.gameObject(vis, { shape: { type: 'circle', radius: 15 }, restitution: 1.1, friction: 0, density: 0.01 });
                     body.setVelocity(Math.cos(Phaser.Math.Between(0, 359)*(Math.PI/180))*2.5, Math.sin(Phaser.Math.Between(0, 359)*(Math.PI/180))*2.5);
                     this.activeBalls.push({ body, data: c });
                 });
@@ -1034,12 +1064,13 @@
                 for (let i = this.activeBalls.length - 1; i >= 0; i--) {
                     let ball = this.activeBalls[i];
                     if (Phaser.Math.Distance.Between(ball.body.x, ball.body.y, this.CX, this.CY) > this.RR + 18) {
-                        gameState.eliminatedNames.push(ball.data.name);
-                        this.elimBox.setText('ELIMINATED:\n' + [...gameState.eliminatedNames].reverse().map(n => `- ${n.substring(0,10)}`).join('\n'));
+                        gameState.eliminatedNames.push(ball.data.name.toUpperCase());
+                        this.elimBox.setText('ELIMINATED:\n' + [...gameState.eliminatedNames].reverse().map(n => `- ${n.substring(0,12)}`).join('\n'));
                         ball.body.destroy(); this.activeBalls.splice(i, 1); this.aliveText.setText(`ALIVE: ${this.activeBalls.length}`);
                         if (this.activeBalls.length === 1) {
-                            this.isGameOver = true; this.winnerTxt.setText(`🎉 WINNER 🎉\n${this.activeBalls[0].data.name}`);
-                            this.time.delayedCall(3000, () => this.scene.start('MenuScene'));
+                            this.isGameOver = true; this.cameras.main.flash(800, 255, 215, 0);
+                            this.winnerTxt.setText(`🎉 WINNER 🎉\n${this.activeBalls[0].data.name.toUpperCase()}`);
+                            this.time.delayedCall(4000, () => this.scene.start('MenuScene'));
                         }
                     }
                 }
