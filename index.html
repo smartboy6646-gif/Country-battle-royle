@@ -546,7 +546,7 @@
 
                     let displayColor = isQualifying ? '#00FF55' : '#ffffff';
                     let nameStr = c.name.length > 11 ? c.name.substring(0, 10) + '..' : c.name;
-                    if (gameState.tourneyPhase === 3 && gameState.brScores[c.code] >= 92 && !isLastRoundFinished) nameStr += " (⚡MP)";
+                    if (gameState.tourneyPhase === 3 && gameState.brScores[c.code] >= 88 && !isLastRoundFinished) nameStr += " (⚡MP)";
                     this.add.text(110, yOffset + 9, nameStr.toUpperCase(), { fontFamily: 'Poppins', fontSize: '14px', color: displayColor, fontStyle: 'bold' }).setOrigin(0, 0).setDepth(2);
                     this.add.text(230, yOffset + 10, `${totalKills[c.code]}`, { fontFamily: 'Poppins', fontSize: '14px', color: '#FF0055', fontStyle:'bold' }).setOrigin(0.5, 0).setDepth(2);
                     this.add.text(300, yOffset + 10, `${totalPlace[c.code]}`, { fontFamily: 'Poppins', fontSize: '14px', color: '#00F3FF', fontStyle:'bold' }).setOrigin(0.5, 0).setDepth(2);
@@ -631,7 +631,7 @@
             playCountdown() {
                 let count = 3;
                 let ghostTxt = null;
-                let cdTxt = this.add.text(270, 480, count.toString(), { fontFamily: 'Montserrat', fontSize: '130px', fontStyle: '900', color: '#00FF55', stroke: '#000', strokeThickness: 12 }).setOrigin(0.5).setDepth(500);
+                let cdTxt = this.add.text(270, 480, count.toString(), { fontFamily: 'Montserrat', fontSize: '430px', fontStyle: '900', color: '#00FF55', stroke: '#000', strokeThickness: 12 }).setOrigin(0.5).setDepth(500);
                 this.tweens.add({ targets: cdTxt, scale: { from: 1.5, to: 1 }, alpha: { from: 1, to: 0.8 }, duration: 250 });
                 this.time.addEvent({
                     delay: 1000,
